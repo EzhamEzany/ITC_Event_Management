@@ -1,11 +1,11 @@
-# Admin (Event Organizer) Module Documentation
+# Admin (ITC Event Organizer) Module Documentation
 
 ---
 
 ## 1. Admin Role Definition
 
-In the UTHM Event Management System, the **Admin** represents an **Event Organizer** rather than a system-wide administrator.  
-The Admin is responsible only for managing events that are published on the platform and monitoring participant registrations related to those events.
+In the ITC Event Management System, the **Admin** represents an **ITC Event Organizer** rather than a system-wide administrator.  
+The Admin is responsible only for managing events organised by the Information Technology Club (ITC) and monitoring participant registrations related to those events.
 
 The Admin does **not** manage system-level configurations, user accounts, or backend infrastructure. This role separation ensures a clear and manageable scope for the system.
 
@@ -13,8 +13,8 @@ The Admin does **not** manage system-level configurations, user accounts, or bac
 
 ## 2. Admin Responsibilities
 
-The Admin (Event Organizer) is responsible for:
-- Creating new events
+The Admin (ITC Event Organizer) is responsible for:
+- Creating new ITC events
 - Updating existing event information
 - Deleting events when necessary
 - Uploading event posters or images
@@ -41,7 +41,7 @@ Only users with the **admin role** can access Admin-related pages and functional
 ## 4. Admin Pages Overview
 
 ### 4.1 Admin Login Page
-The Admin Login Page allows event organisers to authenticate and access the Admin Dashboard.
+The Admin Login Page allows ITC organisers to authenticate and access the Admin Dashboard.
 
 **Key Features:**
 - Email and password login
@@ -51,10 +51,10 @@ The Admin Login Page allows event organisers to authenticate and access the Admi
 ---
 
 ### 4.2 Admin Dashboard Page
-The Admin Dashboard acts as the main control panel for event organisers.
+The Admin Dashboard acts as the main control panel for ITC event organisers.
 
 **Displayed Information:**
-- List of all events created by the admin
+- List of all ITC events created by the admin
 - Summary of participant count for each event
 
 **Functions:**
@@ -66,7 +66,7 @@ The Admin Dashboard acts as the main control panel for event organisers.
 ---
 
 ### 4.3 Add Event Page
-This page allows the Admin to create new events.
+This page allows the Admin to create new ITC events.
 
 **Input Fields:**
 - Event title
@@ -83,7 +83,7 @@ This page allows the Admin to create new events.
 ---
 
 ### 4.4 Edit Event Page
-This page allows the Admin to modify existing event details.
+This page allows the Admin to modify existing ITC event details.
 
 **Editable Information:**
 - Event title
@@ -95,7 +95,7 @@ This page allows the Admin to modify existing event details.
 ---
 
 ### 4.5 Manage Events Page
-This page displays all events managed by the Admin.
+This page displays all ITC events managed by the Admin.
 
 **Functions:**
 - View event details
@@ -105,7 +105,7 @@ This page displays all events managed by the Admin.
 ---
 
 ### 4.6 View Participants Page
-This page allows the Admin to view a list of registered participants for a selected event.
+This page allows the Admin to view a list of registered participants for a selected ITC event.
 
 **Displayed Information:**
 - Participant name
@@ -149,6 +149,6 @@ These limitations ensure the system remains practical, manageable, and suitable 
 
 ## 8. Summary
 
-The Admin (Event Organizer) module enables authorised users to efficiently manage events within the UTHM Event Management System. By limiting the Admin role to event-related operations, the system maintains a clear structure, improves usability, and aligns with the project scope and development timeline.
+The Admin (ITC Event Organizer) module enables authorised users to efficiently manage ITC events. By limiting the Admin role to event-related operations, the system maintains a clear structure, improves usability, and aligns with the project scope and development timeline.
 
 ---

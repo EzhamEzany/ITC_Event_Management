@@ -4,9 +4,9 @@
 
 ## 1. User Role Definition
 
-In the UTHM Event Management System, a **User** represents a **student or staff member of Universiti Tun Hussein Onn Malaysia (UTHM)** who wishes to view, register for, and participate in campus events.
+In the ITC Event Management System, a **User** represents a **UTHM student or staff member** who wishes to view, register for, and participate in events organised by the Information Technology Club (ITC).
 
-The User role is designed for **event participation**, not event management. Users interact with the system mainly to explore available events and manage their own registrations.
+The User role is designed for **event participation**, not event management. Users interact with the system mainly to explore available ITC events and manage their own registrations.
 
 ---
 
@@ -15,7 +15,7 @@ The User role is designed for **event participation**, not event management. Use
 Users are responsible for:
 - Creating a personal account
 - Logging into the system
-- Viewing available events
+- Viewing available ITC events
 - Viewing detailed event information
 - Registering for events
 - Cancelling event registration if necessary
@@ -70,7 +70,7 @@ This page allows users to authenticate and access the system.
 ---
 
 ### 4.3 Home Page
-The Home Page displays an overview of available events.
+The Home Page displays an overview of available ITC events.
 
 **Displayed Content:**
 - Featured events
@@ -80,7 +80,7 @@ The Home Page displays an overview of available events.
 ---
 
 ### 4.4 Event Listing Page
-This page displays a list of all available events.
+This page displays a list of all available ITC events.
 
 **Functions:**
 - View upcoming events
@@ -89,7 +89,7 @@ This page displays a list of all available events.
 ---
 
 ### 4.5 Event Details Page
-This page provides detailed information about a selected event.
+This page provides detailed information about a selected ITC event.
 
 **Displayed Information:**
 - Event title
@@ -107,7 +107,7 @@ This page provides detailed information about a selected event.
 The User Dashboard provides a personalised view for each user.
 
 **Functions:**
-- View registered events
+- View registered ITC events
 - Access event details
 - Cancel event registration
 
@@ -128,7 +128,7 @@ This dashboard helps users track their event participation efficiently.
 
 1. User registers an account
 2. User logs into the system
-3. User browses available events
+3. User browses available ITC events
 4. User views event details
 5. User registers for an event
 6. User views registered events in the User Dashboard
@@ -153,12 +153,12 @@ To maintain system security and structure, users are restricted from:
 - Viewing other users’ registration data
 - Accessing administrative pages
 
-These limitations ensure proper separation between users and event organisers.
+These limitations ensure proper separation between users and ITC organisers.
 
 ---
 
 ## 9. Summary
 
-The User module provides students and staff with a simple and efficient interface to explore and participate in campus events. By focusing on event discovery and registration, the module enhances user engagement while maintaining a secure and well-structured system design.
+The User module provides students and staff with a simple and efficient interface to explore and participate in ITC events. By focusing on event discovery and registration, the module enhances user engagement while maintaining a secure and well-structured system design.
 
 ---

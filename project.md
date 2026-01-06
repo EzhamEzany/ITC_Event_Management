@@ -1,4 +1,4 @@
-# UTHM Event Management System  
+# ITC Event Management System  
 **Course:** BIT21503 – Web Development  
 **Project Type:** Group Project (Website Development)  
 
@@ -6,10 +6,11 @@
 
 ## 1. Project Overview
 
-The **UTHM Event Management System** is a web-based application developed to manage, promote, and coordinate events organised within **Universiti Tun Hussein Onn Malaysia (UTHM)**.  
-The system provides a centralised platform for event organisers to publish and manage events, while allowing students and staff to view and register for events online.
+The **ITC Event Management System** is a web-based application developed to manage, promote, and coordinate events organised by the **Information Technology Club (ITC)** under the Faculty of Computer Science and Information Technology, Universiti Tun Hussein Onn Malaysia (UTHM).  
 
-This project aims to replace traditional event promotion methods such as posters, emails, and social media messages with a structured, efficient, and accessible web system.
+The system provides a centralised platform for ITC event organisers to publish and manage events, while allowing students and staff to view and register for events online.
+
+This project aims to replace traditional event promotion methods such as posters, emails, and social media messages with a structured, efficient, and accessible web system dedicated to ITC activities.
 
 ---
 
@@ -18,7 +19,7 @@ This project aims to replace traditional event promotion methods such as posters
 The main objectives of this project are:
 - To develop a dynamic website using HTML, CSS, and JavaScript.
 - To implement a backend system for user authentication and data management.
-- To allow administrators to manage events using CRUD operations.
+- To allow ITC organisers to manage events using CRUD operations.
 - To allow users to register for and manage their event participation.
 - To store and manage event data using a database.
 - To ensure the website is responsive, secure, and user-friendly.
@@ -29,12 +30,12 @@ The main objectives of this project are:
 
 The system consists of two main user roles:
 
-### 3.1 Admin
-Admins represent event organisers or authorised staff. They are responsible for managing event content and monitoring registrations.
+### 3.1 Admin (ITC Organizer)
+Admins represent **ITC committee members or event organisers**. They are responsible for managing ITC event content and monitoring registrations.
 
 **Admin responsibilities:**
 - Log in to the system
-- Create new events
+- Create new ITC events
 - Update existing event details
 - Delete events
 - Upload event images or posters
@@ -43,11 +44,11 @@ Admins represent event organisers or authorised staff. They are responsible for 
 ---
 
 ### 3.2 User (Student / Staff)
-Users represent UTHM students or staff members who wish to participate in events.
+Users represent **UTHM students or staff members** who wish to participate in ITC-organised events.
 
 **User responsibilities:**
 - Register and log in to the system
-- View available events
+- View available ITC events
 - View detailed event information
 - Register for events
 - Cancel event registration
@@ -69,7 +70,7 @@ This module manages access control to the system.
 ---
 
 ### 4.2 Event Management Module (Admin)
-This module allows administrators to manage event information.
+This module allows ITC organisers to manage event information.
 
 **Functions:**
 - Add event
@@ -81,7 +82,7 @@ This module allows administrators to manage event information.
 ---
 
 ### 4.3 Event Listing Module
-This module allows users to browse available events.
+This module allows users to browse available ITC events.
 
 **Functions:**
 - Display list of upcoming events
@@ -90,7 +91,7 @@ This module allows users to browse available events.
 ---
 
 ### 4.4 Event Registration Module (User)
-This module allows users to participate in events.
+This module allows users to participate in ITC events.
 
 **Functions:**
 - Register for an event
@@ -104,17 +105,17 @@ This module allows users to participate in events.
 This module provides a personalised interface for users.
 
 **Functions:**
-- View registered events
+- View registered ITC events
 - Manage event participation
 - Access event details
 
 ---
 
 ### 4.6 Admin Dashboard Module
-This module provides management tools for administrators.
+This module provides management tools for ITC organisers.
 
 **Functions:**
-- View all events
+- View all ITC events
 - View number of participants per event
 - Manage event content
 
@@ -174,14 +175,14 @@ Although Firestore does not use traditional tables, the data structure follows r
 ### User Flow
 1. User registers an account
 2. User logs in
-3. User browses available events
+3. User browses available ITC events
 4. User views event details
 5. User registers for an event
 6. User views registered events in dashboard
 
 ### Admin Flow
 1. Admin logs in
-2. Admin creates an event
+2. Admin creates an ITC event
 3. Admin edits or deletes event details
 4. Admin views registered participants
 
@@ -198,6 +199,6 @@ Although Firestore does not use traditional tables, the data structure follows r
 
 ## 9. Conclusion
 
-The UTHM Event Management System provides a structured and efficient platform for managing campus events. By integrating frontend technologies with a cloud-based backend, the system improves event visibility, participation tracking, and overall event management efficiency. The project demonstrates essential web development concepts including CRUD operations, database integration, authentication, responsive design, and security practices.
+The ITC Event Management System provides a structured and efficient platform for managing events organised by the Information Technology Club. By integrating frontend technologies with a cloud-based backend, the system improves event visibility, participation tracking, and overall ITC event management efficiency. The project demonstrates essential web development concepts including CRUD operations, database integration, authentication, responsive design, and security practices.
 
 ---
