@@ -1,0 +1,90 @@
+<!-- ===========================================
+     UTHM Event Management System - Event Details Page
+     File: event-details.html
+     Description: Display detailed information about a specific event
+     =========================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Event details and registration">
+    <title>Event Details - UTHM Event Management System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">UTHM Events</a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="events.html" class="active">Events</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content-wrapper">
+        <div class="container">
+            <!-- Event Detail Card -->
+            <div class="event-detail">
+                <!-- Event Image -->
+                <img id="event-image" src="assets/images/placeholder.jpg" alt="Event" class="event-detail-image">
+                
+                <!-- Event Content -->
+                <div class="event-detail-content">
+                    <!-- Event Title -->
+                    <h1 id="event-title" class="event-detail-title">Event Title</h1>
+                    
+                    <!-- Event Meta Information -->
+                    <div class="event-detail-meta">
+                        <div class="meta-item">
+                            <strong>📅 Date:</strong>
+                            <span id="event-date">Loading...</span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>🕐 Time:</strong>
+                            <span id="event-time">Loading...</span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>📍 Location:</strong>
+                            <span id="event-location">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Event Description -->
+                    <div>
+                        <h2>About This Event</h2>
+                        <p id="event-description" class="event-detail-description">Loading event description...</p>
+                    </div>
+                    
+                    <!-- Registration Button -->
+                    <div class="text-center">
+                        <button id="register-btn" class="btn btn-primary btn-block">Register for Event</button>
+                        <p class="mt-2"><small>You must be logged in to register for events</small></p>
+                    </div>
+                    
+                    <!-- Back Button -->
+                    <div class="text-center mt-3">
+                        <a href="events.html" class="btn btn-outline">Back to Events</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Universiti Tun Hussein Onn Malaysia (UTHM)</p>
+            <p>Event Management System | BIT21503 Web Development Project</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
