@@ -13,60 +13,21 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
     doc,
-    getDoc
+    getDoc,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    where,
+    orderBy,
+    Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-// ========== ADMIN DUMMY DATA ==========
-let adminEvents = [
-    {
-        id: 1,
-        title: "ITC Tech Talk 2026",
-        description: "Annual technology talk featuring latest innovations in software development, AI, and data science. Join ITC for keynote speeches, workshops, and networking opportunities.",
-        date: "2026-02-15",
-        time: "09:00 AM",
-        location: "Dewan Kuliah Utama, UTHM",
-        image: "assets/images/event1.jpg",
-        participants: 45
-    },
-    {
-        id: 2,
-        title: "ITC Coding Workshop",
-        description: "Hands-on coding workshop organized by ITC. Learn programming fundamentals and best practices from experienced developers and industry professionals.",
-        date: "2026-03-20",
-        time: "10:00 AM",
-        location: "Computer Lab, Faculty of FSKTM, UTHM",
-        image: "assets/images/event2.jpg",
-        participants: 32
-    },
-    {
-        id: 3,
-        title: "ITC Hackathon 2026",
-        description: "24-hour coding competition organized by ITC. Form teams, solve challenges, and win prizes. Perfect for students passionate about technology and innovation.",
-        date: "2026-04-10",
-        time: "08:30 AM",
-        location: "ITC Lab, UTHM",
-        image: "assets/images/event3.jpg",
-        participants: 78
-    }
-];
-
-// Dummy participants data
-const dummyParticipants = {
-    1: [
-        { id: 1, name: "Ahmad bin Abdullah", email: "ahmad@student.uthm.edu.my", registrationDate: "2026-01-05" },
-        { id: 2, name: "Siti Nurhaliza", email: "siti@student.uthm.edu.my", registrationDate: "2026-01-06" },
-        { id: 3, name: "Muhammad Aiman", email: "aiman@student.uthm.edu.my", registrationDate: "2026-01-07" }
-    ],
-    2: [
-        { id: 4, name: "Nurul Aina", email: "nurul@student.uthm.edu.my", registrationDate: "2026-01-05" },
-        { id: 5, name: "Hafiz Rahman", email: "hafiz@student.uthm.edu.my", registrationDate: "2026-01-06" }
-    ],
-    3: [
-        { id: 6, name: "Amirah Yasmin", email: "amirah@student.uthm.edu.my", registrationDate: "2026-01-05" },
-        { id: 7, name: "Zulkifli Hassan", email: "zul@student.uthm.edu.my", registrationDate: "2026-01-06" },
-        { id: 8, name: "Farah Diana", email: "farah@student.uthm.edu.my", registrationDate: "2026-01-07" }
-    ]
-};
+// ========== EVENTS DATA (Loaded from Firestore) ==========
+// Events are now loaded dynamically from Firestore
+// No more dummy data!
 
 // Current admin user
 let currentAdmin = null;
@@ -167,9 +128,24 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-MY', options);
 }
 
-// Get event by ID
-function getAdminEventById(eventId) {
-    return adminEvents.find(event => event.id === parseInt(eventId));
+/**
+ * Get event by ID from Firestore
+ * @param {string} eventId - Firestore document ID
+ */
+async function getEventById(eventId) {
+    try {
+        const eventDoc = await getDoc(doc(db, 'events', eventId));
+        if (eventDoc.exists()) {
+            return {
+                id: eventDoc.id,
+                ...eventDoc.data()
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error('Error getting event:', error);
+        return null;
+    }
 }
 
 // ========== ADMIN AUTHENTICATION ==========
@@ -274,11 +250,9 @@ async function loadAdminDashboard() {
             }
         }
         
-        // Display statistics
-        displayAdminStats();
-        
-        // Load events table
-        loadAdminEvents();
+        // Display statistics and load events
+        await displayAdminStats();
+        await loadAdminEvents();
         
     } catch (error) {
         console.error('Error loading admin dashboard:', error);
@@ -286,99 +260,163 @@ async function loadAdminDashboard() {
     }
 }
 
-// Display admin statistics
-function displayAdminStats() {
-    const totalEvents = adminEvents.length;
-    const totalParticipants = adminEvents.reduce((sum, event) => sum + event.participants, 0);
-    const upcomingEvents = adminEvents.filter(event => new Date(event.date) > new Date()).length;
-    
-    document.getElementById('total-events').textContent = totalEvents;
-    document.getElementById('total-participants').textContent = totalParticipants;
-    document.getElementById('upcoming-events').textContent = upcomingEvents;
+/**
+ * Display admin statistics from Firestore
+ */
+async function displayAdminStats() {
+    try {
+        // Get all events
+        const eventsSnapshot = await getDocs(collection(db, 'events'));
+        const totalEvents = eventsSnapshot.size;
+        
+        // Get all registrations
+        const registrationsSnapshot = await getDocs(collection(db, 'registrations'));
+        const totalParticipants = registrationsSnapshot.size;
+        
+        // Count upcoming events
+        const today = new Date().toISOString().split('T')[0];
+        let upcomingEvents = 0;
+        eventsSnapshot.forEach((doc) => {
+            const eventData = doc.data();
+            if (eventData.date >= today) {
+                upcomingEvents++;
+            }
+        });
+        
+        // Update display
+        const totalEventsEl = document.getElementById('total-events');
+        const totalParticipantsEl = document.getElementById('total-participants');
+        const upcomingEventsEl = document.getElementById('upcoming-events');
+        
+        if (totalEventsEl) totalEventsEl.textContent = totalEvents;
+        if (totalParticipantsEl) totalParticipantsEl.textContent = totalParticipants;
+        if (upcomingEventsEl) upcomingEventsEl.textContent = upcomingEvents;
+        
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
 }
 
-// Load admin events in table
-function loadAdminEvents() {
+/**
+ * Load admin events from Firestore into table
+ */
+async function loadAdminEvents() {
     const tbody = document.getElementById('events-tbody');
     if (!tbody) return;
     
-    tbody.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading events...</td></tr>';
     
-    if (adminEvents.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No events found.</td></tr>';
-        return;
+    try {
+        // Get all events ordered by date
+        const eventsQuery = query(collection(db, 'events'), orderBy('date', 'desc'));
+        const eventsSnapshot = await getDocs(eventsQuery);
+        
+        tbody.innerHTML = '';
+        
+        if (eventsSnapshot.empty) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No events found.</td></tr>';
+            return;
+        }
+        
+        // Get participant counts for each event
+        let eventIndex = 1;
+        for (const eventDoc of eventsSnapshot.docs) {
+            const eventData = eventDoc.data();
+            
+            // Count participants for this event
+            const registrationsQuery = query(
+                collection(db, 'registrations'),
+                where('eventId', '==', eventDoc.id)
+            );
+            const registrationsSnapshot = await getDocs(registrationsQuery);
+            const participantCount = registrationsSnapshot.size;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${eventIndex++}</td>
+                <td>${eventData.title}</td>
+                <td>${formatDate(eventData.date)}</td>
+                <td>${eventData.location}</td>
+                <td>${participantCount}</td>
+                <td>
+                    <button onclick="viewParticipants('${eventDoc.id}')" class="btn btn-primary" style="margin-right: 0.5rem;">View</button>
+                    <button onclick="editEvent('${eventDoc.id}')" class="btn btn-secondary" style="margin-right: 0.5rem;">Edit</button>
+                    <button onclick="deleteEvent('${eventDoc.id}')" class="btn btn-danger">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+        
+    } catch (error) {
+        console.error('Error loading events:', error);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Error loading events. Please try again.</td></tr>';
     }
-    
-    adminEvents.forEach(event => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${event.id}</td>
-            <td>${event.title}</td>
-            <td>${formatDate(event.date)}</td>
-            <td>${event.location}</td>
-            <td>${event.participants}</td>
-            <td>
-                <button onclick="viewEvent(${event.id})" class="btn btn-primary" style="margin-right: 0.5rem;">View</button>
-                <button onclick="editEvent(${event.id})" class="btn btn-secondary" style="margin-right: 0.5rem;">Edit</button>
-                <button onclick="deleteEvent(${event.id})" class="btn btn-danger">Delete</button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
 }
 
 // ========== EVENT CRUD OPERATIONS ==========
 
-// Add new event
-function handleAddEvent(event) {
+/**
+ * Add new event to Firestore
+ */
+async function handleAddEvent(event) {
     event.preventDefault();
     
     const title = document.getElementById('title').value;
     const description = document.getElementById('description').value;
     const date = document.getElementById('date').value;
-    const time = document.getElementById('time').value;
     const location = document.getElementById('location').value;
     const imageFile = document.getElementById('image').files[0];
     
     // Validation
-    if (!title || !description || !date || !time || !location) {
+    if (!title || !description || !date || !location) {
         showError('Please fill in all required fields.');
         return;
     }
 
-    // TODO: Firebase Firestore CRUD will be added here
-    // TODO: Firebase Storage for image upload will be added here
-    
-    const newEvent = {
-        id: Date.now(),
-        title: title,
-        description: description,
-        date: date,
-        time: time,
-        location: location,
-        image: imageFile ? `assets/images/${imageFile.name}` : 'assets/images/placeholder.jpg',
-        participants: 0
-    };
-    
-    adminEvents.push(newEvent);
-    
-    alert('ITC event added successfully!');
-    window.location.href = 'admin-dashboard.html';
+    try {
+        // Create event object
+        const eventData = {
+            title: title,
+            description: description,
+            date: date,
+            location: location,
+            imageUrl: imageFile ? `assets/images/${imageFile.name}` : 'assets/images/placeholder.jpg',
+            createdBy: auth.currentUser.uid,
+            createdAt: new Date().toISOString()
+        };
+        
+        // Add to Firestore
+        await addDoc(collection(db, 'events'), eventData);
+        
+        alert('ITC event added successfully!');
+        window.location.href = 'admin-dashboard.html';
+        
+    } catch (error) {
+        console.error('Error adding event:', error);
+        showError('Failed to add event. Please try again.');
+    }
 }
 
-// View event details
-function viewEvent(eventId) {
+/**
+ * Navigate to view participants page
+ */
+function viewParticipants(eventId) {
     window.location.href = `admin-view-participants.html?id=${eventId}`;
 }
 
-// Edit event
+/**
+ * Navigate to edit event page
+ */
 function editEvent(eventId) {
     window.location.href = `admin-edit-event.html?id=${eventId}`;
 }
 
-// Load event for editing
-function loadEditEvent() {
-    if (!requireAdminAuth()) return;
+/**
+ * Load event for editing from Firestore
+ */
+async function loadEditEvent() {
+    const isAuthorized = await requireAdminAuth();
+    if (!isAuthorized) return;
     
     const urlParams = new URLSearchParams(window.location.search);
     const eventId = urlParams.get('id');
@@ -389,93 +427,127 @@ function loadEditEvent() {
         return;
     }
     
-    const event = getAdminEventById(eventId);
-    
-    if (!event) {
-        alert('Event not found.');
+    try {
+        const event = await getEventById(eventId);
+        
+        if (!event) {
+            alert('Event not found.');
+            window.location.href = 'admin-dashboard.html';
+            return;
+        }
+        
+        // Populate form
+        document.getElementById('event-id').value = event.id;
+        document.getElementById('title').value = event.title;
+        document.getElementById('description').value = event.description;
+        document.getElementById('date').value = event.date;
+        document.getElementById('location').value = event.location;
+        
+        // Display current image
+        const currentImage = document.getElementById('current-image');
+        if (currentImage) {
+            currentImage.src = event.imageUrl || 'assets/images/placeholder.jpg';
+            currentImage.onerror = function() { this.src = 'assets/images/placeholder.jpg'; };
+        }
+        
+    } catch (error) {
+        console.error('Error loading event:', error);
+        alert('Error loading event. Please try again.');
         window.location.href = 'admin-dashboard.html';
-        return;
-    }
-    
-    // Populate form
-    document.getElementById('event-id').value = event.id;
-    document.getElementById('title').value = event.title;
-    document.getElementById('description').value = event.description;
-    document.getElementById('date').value = event.date;
-    document.getElementById('time').value = event.time;
-    document.getElementById('location').value = event.location;
-    
-    // Display current image
-    const currentImage = document.getElementById('current-image');
-    if (currentImage) {
-        currentImage.src = event.image;
-        currentImage.onerror = function() { this.src = 'assets/images/placeholder.jpg'; };
     }
 }
 
-// Handle edit event form submission
-function handleEditEvent(event) {
+/**
+ * Handle edit event form submission with Firestore update
+ */
+async function handleEditEvent(event) {
     event.preventDefault();
     
-    const eventId = parseInt(document.getElementById('event-id').value);
+    const eventId = document.getElementById('event-id').value;
     const title = document.getElementById('title').value;
     const description = document.getElementById('description').value;
     const date = document.getElementById('date').value;
-    const time = document.getElementById('time').value;
     const location = document.getElementById('location').value;
     const imageFile = document.getElementById('image').files[0];
     
     // Validation
-    if (!title || !description || !date || !time || !location) {
+    if (!title || !description || !date || !location) {
         showError('Please fill in all required fields.');
         return;
     }
 
-    // TODO: Firebase Firestore CRUD will be added here
-    // TODO: Firebase Storage for image upload will be added here
-    
-    const eventIndex = adminEvents.findIndex(e => e.id === eventId);
-    if (eventIndex !== -1) {
-        adminEvents[eventIndex] = {
-            ...adminEvents[eventIndex],
+    try {
+        // Get current event data
+        const eventDoc = await getDoc(doc(db, 'events', eventId));
+        
+        if (!eventDoc.exists()) {
+            showError('Event not found.');
+            return;
+        }
+        
+        // Prepare update data
+        const updateData = {
             title: title,
             description: description,
             date: date,
-            time: time,
             location: location,
-            image: imageFile ? `assets/images/${imageFile.name}` : adminEvents[eventIndex].image
+            updatedAt: new Date().toISOString()
         };
+        
+        // Update image if new one is uploaded
+        if (imageFile) {
+            updateData.imageUrl = `assets/images/${imageFile.name}`;
+        }
+        
+        // Update in Firestore
+        await updateDoc(doc(db, 'events', eventId), updateData);
         
         alert('ITC event updated successfully!');
         window.location.href = 'admin-dashboard.html';
-    } else {
-        showError('Event not found.');
+        
+    } catch (error) {
+        console.error('Error updating event:', error);
+        showError('Failed to update event. Please try again.');
     }
 }
 
-// Delete event
-function deleteEvent(eventId) {
+/**
+ * Delete event from Firestore
+ */
+async function deleteEvent(eventId) {
     if (!confirm('Are you sure you want to delete this ITC event? This action cannot be undone.')) {
         return;
     }
 
-    // TODO: Firebase Firestore CRUD will be added here
-    
-    const eventIndex = adminEvents.findIndex(e => e.id === eventId);
-    if (eventIndex !== -1) {
-        adminEvents.splice(eventIndex, 1);
+    try {
+        // Delete event document
+        await deleteDoc(doc(db, 'events', eventId));
+        
+        // Also delete all registrations for this event
+        const registrationsQuery = query(
+            collection(db, 'registrations'),
+            where('eventId', '==', eventId)
+        );
+        const registrationsSnapshot = await getDocs(registrationsQuery);
+        
+        // Delete each registration
+        const deletePromises = registrationsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        
         alert('ITC event deleted successfully.');
-        loadAdminEvents();
-    } else {
-        alert('Event not found.');
+        location.reload();
+        
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        alert('Failed to delete event. Please try again.');
     }
 }
 
 // ========== PARTICIPANTS MANAGEMENT ==========
 
 /**
- * Load Participants for an Event
- * Displays list of registered participants
+ * Load Participants for an Event from Firestore
+ * Displays list of registered participants with their details
  */
 async function loadParticipants() {
     // Verify admin authentication
@@ -491,27 +563,58 @@ async function loadParticipants() {
         return;
     }
     
-    const event = getAdminEventById(eventId);
-    
-    if (!event) {
-        alert('Event not found.');
-        window.location.href = 'admin-dashboard.html';
-        return;
+    try {
+        // Get event details
+        const event = await getEventById(eventId);
+        
+        if (!event) {
+            alert('Event not found.');
+            window.location.href = 'admin-dashboard.html';
+            return;
+        }
+        
+        // Display event title
+        const eventTitleElement = document.getElementById('event-title');
+        if (eventTitleElement) {
+            eventTitleElement.textContent = event.title;
+        }
+        
+        // Get registrations for this event
+        const registrationsQuery = query(
+            collection(db, 'registrations'),
+            where('eventId', '==', eventId)
+        );
+        const registrationsSnapshot = await getDocs(registrationsQuery);
+        
+        // Get participant details
+        const participants = [];
+        for (const regDoc of registrationsSnapshot.docs) {
+            const regData = regDoc.data();
+            
+            // Get user details from users collection
+            const userDoc = await getDoc(doc(db, 'users', regData.userId));
+            
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                participants.push({
+                    name: userData.name,
+                    email: userData.email,
+                    registeredAt: regData.registeredAt
+                });
+            }
+        }
+        
+        renderParticipantsTable(participants);
+        
+    } catch (error) {
+        console.error('Error loading participants:', error);
+        alert('Error loading participants. Please try again.');
     }
-    
-    // Display event title
-    const eventTitleElement = document.getElementById('event-title');
-    if (eventTitleElement) {
-        eventTitleElement.textContent = event.title;
-    }
-    
-    // TODO: Firebase Firestore query to get participants will be added here
-    const participants = dummyParticipants[eventId] || [];
-    
-    renderParticipantsTable(participants);
 }
 
-// Render participants table
+/**
+ * Render participants table
+ */
 function renderParticipantsTable(participants) {
     const tbody = document.getElementById('participants-tbody');
     if (!tbody) return;
@@ -529,7 +632,7 @@ function renderParticipantsTable(participants) {
             <td>${index + 1}</td>
             <td>${participant.name}</td>
             <td>${participant.email}</td>
-            <td>${formatDate(participant.registrationDate)}</td>
+            <td>${formatDate(participant.registeredAt)}</td>
         `;
         tbody.appendChild(row);
     });
@@ -622,7 +725,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const isAuthEdit = await requireAdminAuth();
             if (!isAuthEdit) return;
             
-            loadEditEvent();
+            await loadEditEvent();
             const editForm = document.getElementById('edit-event-form');
             if (editForm) {
                 editForm.addEventListener('submit', handleEditEvent);
@@ -640,3 +743,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             break;
     }
 });
+
+// ========== EXPOSE FUNCTIONS FOR ONCLICK HANDLERS ==========
+// Make functions available globally for onclick attributes in HTML
+window.viewParticipants = viewParticipants;
+window.editEvent = editEvent;
+window.deleteEvent = deleteEvent;

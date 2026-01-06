@@ -15,58 +15,23 @@ import {
 import {
     doc,
     setDoc,
-    getDoc
+    getDoc,
+    collection,
+    getDocs,
+    addDoc,
+    query,
+    where,
+    deleteDoc,
+    orderBy,
+    Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-// ========== DUMMY DATA FOR PROTOTYPE ==========
-const dummyEvents = [
-    {
-        id: 1,
-        title: "ITC Tech Talk 2026",
-        description: "Annual technology talk featuring latest innovations in software development, AI, and data science. Join ITC for keynote speeches, workshops, and networking opportunities.",
-        date: "2026-02-15",
-        time: "09:00 AM",
-        location: "Dewan Kuliah Utama, UTHM",
-        image: "assets/images/event1.jpg",
-        registered: false
-    },
-    {
-        id: 2,
-        title: "ITC Coding Workshop",
-        description: "Hands-on coding workshop organized by ITC. Learn programming fundamentals and best practices from experienced developers and industry professionals.",
-        date: "2026-03-20",
-        time: "10:00 AM",
-        location: "Computer Lab, Faculty of FSKTM, UTHM",
-        image: "assets/images/event2.jpg",
-        registered: false
-    },
-    {
-        id: 3,
-        title: "ITC Hackathon 2026",
-        description: "24-hour coding competition organized by ITC. Form teams, solve challenges, and win prizes. Perfect for students passionate about technology and innovation.",
-        date: "2026-04-10",
-        time: "08:30 AM",
-        location: "ITC Lab, UTHM",
-        image: "assets/images/event3.jpg",
-        registered: false
-    },
-    {
-        id: 4,
-        title: "ITC Career Guidance Session",
-        description: "Career guidance and networking session organized by ITC. Meet industry professionals and learn about career paths in Information Technology.",
-        date: "2026-05-05",
-        time: "06:00 PM",
-        location: "Seminar Room, FSKTM, UTHM",
-        image: "assets/images/event4.jpg",
-        registered: false
-    }
-];
+// ========== EVENTS DATA (Loaded from Firestore) ==========
+// Events are now loaded dynamically from Firestore
+// No more dummy data!
 
 // Current logged-in user
 let currentUser = null;
-
-// Registered events for user
-let userRegistrations = [];
 
 // ========== FIREBASE AUTH STATE LISTENER ==========
 
@@ -101,15 +66,55 @@ onAuthStateChanged(auth, async (user) => {
 
 // ========== UTILITY FUNCTIONS ==========
 
+/**
+ * Load all events from Firestore
+ * Returns array of events from Firestore events collection
+ */
+async function loadEventsFromFirestore() {
+    try {
+        const eventsCol = collection(db, 'events');
+        const eventsQuery = query(eventsCol, orderBy('date', 'asc'));
+        const eventsSnapshot = await getDocs(eventsQuery);
+        
+        const events = [];
+        eventsSnapshot.forEach((doc) => {
+            events.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        return events;
+    } catch (error) {
+        console.error('Error loading events:', error);
+        return [];
+    }
+}
+
 // Format date to readable format
 function formatDate(dateString) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-MY', options);
 }
 
-// Get event by ID
-function getEventById(eventId) {
-    return dummyEvents.find(event => event.id === parseInt(eventId));
+/**
+ * Get event by ID from Firestore
+ * @param {string} eventId - Firestore document ID
+ */
+async function getEventById(eventId) {
+    try {
+        const eventDoc = await getDoc(doc(db, 'events', eventId));
+        if (eventDoc.exists()) {
+            return {
+                id: eventDoc.id,
+                ...eventDoc.data()
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error('Error getting event:', error);
+        return null;
+    }
 }
 
 // Check if user is logged in
@@ -145,6 +150,31 @@ function updateNavigation() {
 
 // ========== EVENT LISTING FUNCTIONS ==========
 
+/**
+ * Load and render events from Firestore
+ * @param {string} containerId - ID of container element
+ * @param {number} limit - Optional limit on number of events
+ */
+async function loadAndRenderEvents(containerId, limit = null) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = '<p class="text-center">Loading events...</p>';
+    
+    try {
+        let events = await loadEventsFromFirestore();
+        
+        if (limit) {
+            events = events.slice(0, limit);
+        }
+        
+        renderEvents(events, containerId);
+    } catch (error) {
+        console.error('Error loading events:', error);
+        container.innerHTML = '<p class="text-center">Error loading events. Please try again.</p>';
+    }
+}
+
 // Render event cards
 function renderEvents(events, containerId) {
     const container = document.getElementById(containerId);
@@ -169,12 +199,11 @@ function createEventCard(event) {
     card.className = 'card';
     
     card.innerHTML = `
-        <img src="${event.image}" alt="${event.title}" class="card-image" onerror="this.src='assets/images/placeholder.jpg'">
+        <img src="${event.imageUrl || 'assets/images/placeholder.jpg'}" alt="${event.title}" class="card-image" onerror="this.src='assets/images/placeholder.jpg'">
         <div class="card-content">
             <h3 class="card-title">${event.title}</h3>
             <div class="card-meta">
                 <span><strong>📅</strong> ${formatDate(event.date)}</span>
-                <span><strong>🕐</strong> ${event.time}</span>
             </div>
             <div class="card-meta">
                 <span><strong>📍</strong> ${event.location}</span>
@@ -189,52 +218,62 @@ function createEventCard(event) {
 
 // ========== EVENT DETAILS FUNCTIONS ==========
 
-// Load event details
-function loadEventDetails() {
+/**
+ * Load event details from Firestore
+ */
+async function loadEventDetails() {
     const urlParams = new URLSearchParams(window.location.search);
     const eventId = urlParams.get('id');
     
-    if (!eventId) {
-        document.querySelector('.event-detail-content').innerHTML = '<p>Event not found.</p>';
-        return;
-    }
-
-    const event = getEventById(eventId);
+    const contentDiv = document.querySelector('.event-detail-content');
+    if (!contentDiv) return;
     
-    if (!event) {
-        document.querySelector('.event-detail-content').innerHTML = '<p>Event not found.</p>';
+    if (!eventId) {
+        contentDiv.innerHTML = '<p>Event not found.</p>';
         return;
     }
 
-    // Display event details
-    displayEventDetails(event);
+    try {
+        const event = await getEventById(eventId);
+        
+        if (!event) {
+            contentDiv.innerHTML = '<p>Event not found.</p>';
+            return;
+        }
+
+        // Display event details
+        await displayEventDetails(event);
+    } catch (error) {
+        console.error('Error loading event details:', error);
+        contentDiv.innerHTML = '<p>Error loading event details. Please try again.</p>';
+    }
 }
 
-// Display event details
-function displayEventDetails(event) {
+/**
+ * Display event details
+ */
+async function displayEventDetails(event) {
     const imageElement = document.getElementById('event-image');
     const titleElement = document.getElementById('event-title');
     const dateElement = document.getElementById('event-date');
-    const timeElement = document.getElementById('event-time');
     const locationElement = document.getElementById('event-location');
     const descriptionElement = document.getElementById('event-description');
     const registerBtn = document.getElementById('register-btn');
 
     if (imageElement) {
-        imageElement.src = event.image;
+        imageElement.src = event.imageUrl || 'assets/images/placeholder.jpg';
         imageElement.alt = event.title;
         imageElement.onerror = function() { this.src = 'assets/images/placeholder.jpg'; };
     }
     if (titleElement) titleElement.textContent = event.title;
     if (dateElement) dateElement.textContent = formatDate(event.date);
-    if (timeElement) timeElement.textContent = event.time;
     if (locationElement) locationElement.textContent = event.location;
     if (descriptionElement) descriptionElement.textContent = event.description;
 
     // Check if user is already registered
-    const isRegistered = checkIfRegistered(event.id);
-    
     if (registerBtn) {
+        const isRegistered = await checkIfRegistered(event.id);
+        
         if (isRegistered) {
             registerBtn.textContent = 'Already Registered';
             registerBtn.disabled = true;
@@ -248,73 +287,99 @@ function displayEventDetails(event) {
 
 // ========== REGISTRATION FUNCTIONS ==========
 
-// Check if user is registered for event
-function checkIfRegistered(eventId) {
-    // TODO: Firebase Firestore integration will be added here
-    const registrations = JSON.parse(localStorage.getItem('userRegistrations') || '[]');
-    const user = getCurrentUser();
-    if (!user) return false;
+/**
+ * Check if user is registered for event
+ * @param {string} eventId - Firestore event document ID
+ */
+async function checkIfRegistered(eventId) {
+    if (!auth.currentUser) return false;
     
-    return registrations.some(reg => 
-        reg.eventId === eventId && reg.userId === user.id
-    );
+    try {
+        const registrationsRef = collection(db, 'registrations');
+        const q = query(
+            registrationsRef,
+            where('userId', '==', auth.currentUser.uid),
+            where('eventId', '==', eventId)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+    } catch (error) {
+        console.error('Error checking registration:', error);
+        return false;
+    }
 }
 
-// Register for event
-function registerForEvent(eventId) {
+/**
+ * Register user for event
+ * @param {string} eventId - Firestore event document ID
+ */
+async function registerForEvent(eventId) {
     if (!isLoggedIn()) {
         alert('Please login to register for ITC events.');
         window.location.href = 'login.html';
         return;
     }
 
-    // TODO: Firebase Firestore CRUD will be added here
-    const user = getCurrentUser();
-    const registrations = JSON.parse(localStorage.getItem('userRegistrations') || '[]');
-    
-    // Check for duplicate registration
-    const alreadyRegistered = registrations.some(reg => 
-        reg.eventId === eventId && reg.userId === user.id
-    );
-    
-    if (alreadyRegistered) {
-        alert('You are already registered for this ITC event.');
-        return;
+    try {
+        // Check for duplicate registration
+        const alreadyRegistered = await checkIfRegistered(eventId);
+        
+        if (alreadyRegistered) {
+            alert('You are already registered for this ITC event.');
+            return;
+        }
+        
+        // Add registration to Firestore
+        await addDoc(collection(db, 'registrations'), {
+            userId: auth.currentUser.uid,
+            eventId: eventId,
+            registeredAt: new Date().toISOString()
+        });
+        
+        alert('Successfully registered for the ITC event!');
+        location.reload();
+        
+    } catch (error) {
+        console.error('Error registering for event:', error);
+        alert('Failed to register for event. Please try again.');
     }
-    
-    // Add registration
-    const registration = {
-        id: Date.now(),
-        userId: user.id,
-        eventId: eventId,
-        registrationDate: new Date().toISOString()
-    };
-    
-    registrations.push(registration);
-    localStorage.setItem('userRegistrations', JSON.stringify(registrations));
-    
-    alert('Successfully registered for the ITC event!');
-    location.reload();
 }
 
-// Cancel event registration
-function cancelRegistration(eventId) {
+/**
+ * Cancel event registration
+ * @param {string} eventId - Firestore event document ID
+ */
+async function cancelRegistration(eventId) {
     if (!confirm('Are you sure you want to cancel this ITC event registration?')) {
         return;
     }
 
-    // TODO: Firebase Firestore CRUD will be added here
-    const user = getCurrentUser();
-    let registrations = JSON.parse(localStorage.getItem('userRegistrations') || '[]');
-    
-    registrations = registrations.filter(reg => 
-        !(reg.eventId === eventId && reg.userId === user.id)
-    );
-    
-    localStorage.setItem('userRegistrations', JSON.stringify(registrations));
-    
-    alert('Registration cancelled successfully.');
-    location.reload();
+    try {
+        const registrationsRef = collection(db, 'registrations');
+        const q = query(
+            registrationsRef,
+            where('userId', '==', auth.currentUser.uid),
+            where('eventId', '==', eventId)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            alert('Registration not found.');
+            return;
+        }
+        
+        // Delete the registration document
+        await deleteDoc(querySnapshot.docs[0].ref);
+        
+        alert('Registration cancelled successfully.');
+        location.reload();
+        
+    } catch (error) {
+        console.error('Error cancelling registration:', error);
+        alert('Failed to cancel registration. Please try again.');
+    }
 }
 
 // ========== USER AUTHENTICATION FUNCTIONS ==========
@@ -499,7 +564,7 @@ async function loadUserDashboard() {
             welcomeElement.textContent = `Welcome, ${userData.name}!`;
         }
 
-        loadUserRegistrations();
+        await loadUserRegistrations();
         
     } catch (error) {
         console.error('Error loading dashboard:', error);
@@ -507,21 +572,52 @@ async function loadUserDashboard() {
     }
 }
 
-// Load user registrations
-function loadUserRegistrations() {
-    const user = getCurrentUser();
-    const registrations = JSON.parse(localStorage.getItem('userRegistrations') || '[]');
+/**
+ * Load user's registered events from Firestore
+ */
+async function loadUserRegistrations() {
+    const container = document.getElementById('registered-events');
+    if (!container) return;
     
-    const userRegs = registrations.filter(reg => reg.userId === user.id);
-    const registeredEvents = userRegs.map(reg => {
-        const event = getEventById(reg.eventId);
-        return { ...event, registrationId: reg.id, registrationDate: reg.registrationDate };
-    }).filter(event => event !== undefined);
-
-    renderUserRegistrations(registeredEvents);
+    container.innerHTML = '<p class="text-center">Loading your registered events...</p>';
+    
+    try {
+        // Get user's registrations
+        const registrationsRef = collection(db, 'registrations');
+        const q = query(registrationsRef, where('userId', '==', auth.currentUser.uid));
+        const registrationsSnapshot = await getDocs(q);
+        
+        if (registrationsSnapshot.empty) {
+            container.innerHTML = '<p class="text-center">You have not registered for any ITC events yet.</p>';
+            return;
+        }
+        
+        // Get event details for each registration
+        const registeredEvents = [];
+        for (const regDoc of registrationsSnapshot.docs) {
+            const regData = regDoc.data();
+            const event = await getEventById(regData.eventId);
+            
+            if (event) {
+                registeredEvents.push({
+                    ...event,
+                    registrationId: regDoc.id,
+                    registeredAt: regData.registeredAt
+                });
+            }
+        }
+        
+        renderUserRegistrations(registeredEvents);
+        
+    } catch (error) {
+        console.error('Error loading registrations:', error);
+        container.innerHTML = '<p class="text-center">Error loading your registrations. Please try again.</p>';
+    }
 }
 
-// Render user registrations
+/**
+ * Render user's registered events
+ */
 function renderUserRegistrations(events) {
     const container = document.getElementById('registered-events');
     if (!container) return;
@@ -538,20 +634,19 @@ function renderUserRegistrations(events) {
         card.className = 'card';
         
         card.innerHTML = `
-            <img src="${event.image}" alt="${event.title}" class="card-image" onerror="this.src='assets/images/placeholder.jpg'">
+            <img src="${event.imageUrl || 'assets/images/placeholder.jpg'}" alt="${event.title}" class="card-image" onerror="this.src='assets/images/placeholder.jpg'">
             <div class="card-content">
                 <h3 class="card-title">${event.title}</h3>
                 <div class="card-meta">
                     <span><strong>📅</strong> ${formatDate(event.date)}</span>
-                    <span><strong>🕐</strong> ${event.time}</span>
                 </div>
                 <div class="card-meta">
                     <span><strong>📍</strong> ${event.location}</span>
                 </div>
-                <p class="card-text"><small>Registered on: ${formatDate(event.registrationDate)}</small></p>
+                <p class="card-text"><small>Registered on: ${formatDate(event.registeredAt)}</small></p>
                 <div style="display: flex; gap: 1rem;">
                     <a href="event-details.html?id=${event.id}" class="btn btn-primary" style="flex: 1;">View Details</a>
-                    <button onclick="cancelRegistration(${event.id})" class="btn btn-danger" style="flex: 1;">Cancel</button>
+                    <button onclick="cancelRegistration('${event.id}')" class="btn btn-danger" style="flex: 1;">Cancel</button>
                 </div>
             </div>
         `;
@@ -579,8 +674,10 @@ function showError(message) {
 
 // ========== PAGE INITIALIZATION ==========
 
-// Initialize page based on current page
-document.addEventListener('DOMContentLoaded', function() {
+/**
+ * Initialize page based on current page
+ */
+document.addEventListener('DOMContentLoaded', async function() {
     // Update navigation for all pages
     updateNavigation();
     
@@ -590,18 +687,18 @@ document.addEventListener('DOMContentLoaded', function() {
     switch(currentPage) {
         case 'index.html':
         case '':
-            // Load featured events on homepage
-            renderEvents(dummyEvents.slice(0, 3), 'featured-events');
+            // Load featured events on homepage (first 3 events)
+            await loadAndRenderEvents('featured-events', 3);
             break;
             
         case 'events.html':
             // Load all events
-            renderEvents(dummyEvents, 'events-list');
+            await loadAndRenderEvents('events-list');
             break;
             
         case 'event-details.html':
             // Load event details
-            loadEventDetails();
+            await loadEventDetails();
             break;
             
         case 'login.html':
@@ -622,7 +719,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
         case 'user-dashboard.html':
             // Load user dashboard
-            loadUserDashboard();
+            await loadUserDashboard();
             break;
     }
 });
+
+// ========== EXPOSE FUNCTIONS FOR ONCLICK HANDLERS ==========
+// Make functions available globally for onclick attributes in HTML
+window.cancelRegistration = cancelRegistration;
+window.handleLogout = handleLogout;

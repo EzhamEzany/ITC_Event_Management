@@ -57,12 +57,17 @@ function updatePasswordStrength(password) {
 
 // ========== SEARCH AND FILTER UTILITIES ==========
 
-// Search events by title or description
-function searchEvents(query) {
-    if (!query) return dummyEvents;
+/**
+ * Search events by title or description
+ * Note: This utility function can be used with events loaded from Firestore
+ * @param {Array} events - Array of event objects
+ * @param {string} query - Search query string
+ */
+function searchEvents(events, query) {
+    if (!query || !events) return events || [];
     
     query = query.toLowerCase();
-    return dummyEvents.filter(event => 
+    return events.filter(event => 
         event.title.toLowerCase().includes(query) ||
         event.description.toLowerCase().includes(query) ||
         event.location.toLowerCase().includes(query)
