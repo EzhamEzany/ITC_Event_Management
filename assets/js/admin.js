@@ -6,6 +6,15 @@
 
 // Import Firebase services
 import { auth, db } from './firebase.js';
+import { 
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {
+    doc,
+    getDoc
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // ========== ADMIN DUMMY DATA ==========
 let adminEvents = [
@@ -62,30 +71,94 @@ const dummyParticipants = {
 // Current admin user
 let currentAdmin = null;
 
+// Admin email whitelist - Only these emails can access admin functions
+const ADMIN_EMAILS = [
+    'admin@itc.uthm.edu.my',
+    'itc@uthm.edu.my',
+    'organizer@itc.uthm.edu.my'
+];
+
+// ========== FIREBASE AUTH STATE LISTENER ==========
+
+/**
+ * Firebase Authentication State Listener for Admin
+ * Monitors admin authentication state
+ */
+onAuthStateChanged(auth, async (user) => {
+    currentAdmin = user;
+    
+    if (user) {
+        // Admin is signed in, verify their role
+        try {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                currentAdmin = {
+                    uid: user.uid,
+                    email: user.email,
+                    ...userData
+                };
+            }
+        } catch (error) {
+            console.error('Error fetching admin data:', error);
+        }
+    }
+});
+
 // ========== UTILITY FUNCTIONS ==========
 
 // Check if admin is logged in
 function isAdminLoggedIn() {
-    // TODO: Firebase Auth integration will be added here
-    const admin = sessionStorage.getItem('currentAdmin');
-    return admin !== null;
+    // Firebase Auth provides the current user
+    return auth.currentUser !== null;
 }
 
 // Get current admin
 function getCurrentAdmin() {
-    // TODO: Firebase Auth integration will be added here
-    const adminJSON = sessionStorage.getItem('currentAdmin');
-    return adminJSON ? JSON.parse(adminJSON) : null;
+    // Return the current authenticated admin from Firebase
+    return currentAdmin;
 }
 
-// Redirect if not logged in
-function requireAdminAuth() {
-    if (!isAdminLoggedIn()) {
+/**
+ * Require Admin Authentication
+ * Redirects to login if not authenticated or not an admin
+ */
+async function requireAdminAuth() {
+    if (!auth.currentUser) {
         alert('Please login as ITC organizer to access this page.');
         window.location.href = 'admin-login.html';
         return false;
     }
-    return true;
+    
+    try {
+        // Verify user has admin role
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+        
+        if (!userDoc.exists()) {
+            alert('User profile not found.');
+            await signOut(auth);
+            window.location.href = 'admin-login.html';
+            return false;
+        }
+        
+        const userData = userDoc.data();
+        
+        // Check if user has admin role OR is in admin email whitelist
+        if (userData.role !== 'admin' && !ADMIN_EMAILS.includes(auth.currentUser.email)) {
+            alert('Access denied. This page is for ITC organizers only.');
+            await signOut(auth);
+            window.location.href = 'admin-login.html';
+            return false;
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('Error verifying admin:', error);
+        alert('Authentication error. Please try again.');
+        window.location.href = 'admin-login.html';
+        return false;
+    }
 }
 
 // Format date
@@ -101,8 +174,11 @@ function getAdminEventById(eventId) {
 
 // ========== ADMIN AUTHENTICATION ==========
 
-// Handle admin login
-function handleAdminLogin(event) {
+/**
+ * Handle Admin Login
+ * Authenticates admin with Firebase Auth and verifies admin role
+ */
+async function handleAdminLogin(event) {
     event.preventDefault();
     
     const email = document.getElementById('email').value;
@@ -113,48 +189,101 @@ function handleAdminLogin(event) {
         return;
     }
 
-    // TODO: Firebase Auth integration will be added here
-    // For prototype, accept any admin credentials
-    const admin = {
-        id: Date.now(),
-        email: email,
-        name: 'ITC Organizer',
-        role: 'admin'
-    };
-    
-    sessionStorage.setItem('currentAdmin', JSON.stringify(admin));
-    
-    alert('ITC organizer login successful!');
-    window.location.href = 'admin-dashboard.html';
+    try {
+        // Sign in with Firebase Auth
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        // Get user role from Firestore
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        
+        if (!userDoc.exists()) {
+            showError('User profile not found. Please contact support.');
+            await signOut(auth);
+            return;
+        }
+        
+        const userData = userDoc.data();
+        
+        // Check if user has admin role OR is in admin email whitelist
+        if (userData.role !== 'admin' && !ADMIN_EMAILS.includes(email)) {
+            showError('Access denied. Only ITC organizers can login here.');
+            await signOut(auth);
+            return;
+        }
+        
+        // Redirect to admin dashboard
+        alert('ITC organizer login successful!');
+        window.location.href = 'admin-dashboard.html';
+        
+    } catch (error) {
+        console.error('Admin login error:', error);
+        
+        // Handle specific error codes
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            showError('Invalid email or password.');
+        } else if (error.code === 'auth/invalid-email') {
+            showError('Invalid email format.');
+        } else if (error.code === 'auth/too-many-requests') {
+            showError('Too many failed login attempts. Please try again later.');
+        } else {
+            showError('Login failed. Please try again.');
+        }
+    }
 }
 
-// Handle admin logout
-function handleAdminLogout() {
+/**
+ * Handle Admin Logout
+ * Signs out admin from Firebase Auth
+ */
+async function handleAdminLogout() {
     if (confirm('Are you sure you want to logout?')) {
-        // TODO: Firebase Auth integration will be added here
-        sessionStorage.removeItem('currentAdmin');
-        alert('Logged out successfully.');
-        window.location.href = 'admin-login.html';
+        try {
+            await signOut(auth);
+            alert('Logged out successfully.');
+            window.location.href = 'admin-login.html';
+        } catch (error) {
+            console.error('Logout error:', error);
+            alert('Logout failed. Please try again.');
+        }
     }
 }
 
 // ========== ADMIN DASHBOARD ==========
 
-// Load admin dashboard
-function loadAdminDashboard() {
-    if (!requireAdminAuth()) return;
+/**
+ * Load Admin Dashboard
+ * Verifies admin authentication and displays dashboard data
+ */
+async function loadAdminDashboard() {
+    // Verify admin authentication
+    const isAuthorized = await requireAdminAuth();
+    if (!isAuthorized) return;
     
-    const admin = getCurrentAdmin();
-    const welcomeElement = document.getElementById('welcome-message');
-    if (welcomeElement) {
-        welcomeElement.textContent = `Welcome, ${admin.name}`;
+    try {
+        // Get admin data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            
+            // Display welcome message
+            const welcomeElement = document.getElementById('welcome-message');
+            if (welcomeElement) {
+                welcomeElement.textContent = `Welcome, ${userData.name || 'ITC Organizer'}`;
+            }
+        }
+        
+        // Display statistics
+        displayAdminStats();
+        
+        // Load events table
+        loadAdminEvents();
+        
+    } catch (error) {
+        console.error('Error loading admin dashboard:', error);
+        showError('Error loading dashboard. Please try again.');
     }
-    
-    // Display statistics
-    displayAdminStats();
-    
-    // Load events table
-    loadAdminEvents();
 }
 
 // Display admin statistics
@@ -344,9 +473,14 @@ function deleteEvent(eventId) {
 
 // ========== PARTICIPANTS MANAGEMENT ==========
 
-// Load participants for an event
-function loadParticipants() {
-    if (!requireAdminAuth()) return;
+/**
+ * Load Participants for an Event
+ * Displays list of registered participants
+ */
+async function loadParticipants() {
+    // Verify admin authentication
+    const isAuthorized = await requireAdminAuth();
+    if (!isAuthorized) return;
     
     const urlParams = new URLSearchParams(window.location.search);
     const eventId = urlParams.get('id');
@@ -445,8 +579,11 @@ function showError(message) {
 
 // ========== PAGE INITIALIZATION ==========
 
-// Initialize admin pages
-document.addEventListener('DOMContentLoaded', function() {
+/**
+ * Initialize Admin Pages
+ * Sets up event listeners and loads page-specific content
+ */
+document.addEventListener('DOMContentLoaded', async function() {
     const currentPage = window.location.pathname.split('/').pop();
     
     switch(currentPage) {
@@ -458,7 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
             break;
             
         case 'admin-dashboard.html':
-            loadAdminDashboard();
+            await loadAdminDashboard();
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', handleAdminLogout);
@@ -466,7 +603,9 @@ document.addEventListener('DOMContentLoaded', function() {
             break;
             
         case 'admin-add-event.html':
-            if (!requireAdminAuth()) return;
+            const isAuthAdd = await requireAdminAuth();
+            if (!isAuthAdd) return;
+            
             const addForm = document.getElementById('add-event-form');
             if (addForm) {
                 addForm.addEventListener('submit', handleAddEvent);
@@ -480,6 +619,9 @@ document.addEventListener('DOMContentLoaded', function() {
             break;
             
         case 'admin-edit-event.html':
+            const isAuthEdit = await requireAdminAuth();
+            if (!isAuthEdit) return;
+            
             loadEditEvent();
             const editForm = document.getElementById('edit-event-form');
             if (editForm) {
@@ -494,7 +636,7 @@ document.addEventListener('DOMContentLoaded', function() {
             break;
             
         case 'admin-view-participants.html':
-            loadParticipants();
+            await loadParticipants();
             break;
     }
 });

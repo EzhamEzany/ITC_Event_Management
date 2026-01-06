@@ -6,6 +6,17 @@
 
 // Import Firebase services
 import { auth, db } from './firebase.js';
+import { 
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {
+    doc,
+    setDoc,
+    getDoc
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // ========== DUMMY DATA FOR PROTOTYPE ==========
 const dummyEvents = [
@@ -51,11 +62,42 @@ const dummyEvents = [
     }
 ];
 
-// Current logged-in user (dummy data)
+// Current logged-in user
 let currentUser = null;
 
 // Registered events for user
 let userRegistrations = [];
+
+// ========== FIREBASE AUTH STATE LISTENER ==========
+
+/**
+ * Firebase Authentication State Listener
+ * This listener monitors the user's authentication state
+ * and handles automatic redirects based on user role
+ */
+onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    
+    if (user) {
+        // User is signed in, get their role from Firestore
+        try {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    ...userData
+                };
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    }
+    
+    // Update navigation based on auth state
+    updateNavigation();
+});
 
 // ========== UTILITY FUNCTIONS ==========
 
@@ -72,17 +114,14 @@ function getEventById(eventId) {
 
 // Check if user is logged in
 function isLoggedIn() {
-    // TODO: Firebase Auth integration will be added here
-    // For now, check if currentUser exists in sessionStorage
-    const user = sessionStorage.getItem('currentUser');
-    return user !== null;
+    // Firebase Auth provides the current user
+    return auth.currentUser !== null;
 }
 
 // Get current user
 function getCurrentUser() {
-    // TODO: Firebase Auth integration will be added here
-    const userJSON = sessionStorage.getItem('currentUser');
-    return userJSON ? JSON.parse(userJSON) : null;
+    // Return the current authenticated user from Firebase
+    return currentUser;
 }
 
 // Update navigation based on login status
@@ -280,8 +319,11 @@ function cancelRegistration(eventId) {
 
 // ========== USER AUTHENTICATION FUNCTIONS ==========
 
-// Handle user login
-function handleLogin(event) {
+/**
+ * Handle User Login
+ * Authenticates user with Firebase Auth and redirects based on role
+ */
+async function handleLogin(event) {
     event.preventDefault();
     
     const email = document.getElementById('email').value;
@@ -293,23 +335,55 @@ function handleLogin(event) {
         return;
     }
 
-    // TODO: Firebase Auth integration will be added here
-    // For now, create dummy user
-    const user = {
-        id: Date.now(),
-        email: email,
-        name: email.split('@')[0],
-        role: 'user'
-    };
-    
-    sessionStorage.setItem('currentUser', JSON.stringify(user));
-    
-    alert('Login successful!');
-    window.location.href = 'user-dashboard.html';
+    try {
+        // Sign in with Firebase Auth
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        // Get user role from Firestore
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        
+        if (!userDoc.exists()) {
+            showError('User profile not found. Please contact support.');
+            await signOut(auth);
+            return;
+        }
+        
+        const userData = userDoc.data();
+        
+        // Check role and redirect accordingly
+        if (userData.role === 'admin') {
+            // Admin should use admin login page
+            showError('Admin users should login through the Admin Login page.');
+            await signOut(auth);
+            return;
+        }
+        
+        // Redirect to user dashboard
+        alert('Login successful!');
+        window.location.href = 'user-dashboard.html';
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        
+        // Handle specific error codes
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            showError('Invalid email or password.');
+        } else if (error.code === 'auth/invalid-email') {
+            showError('Invalid email format.');
+        } else if (error.code === 'auth/too-many-requests') {
+            showError('Too many failed login attempts. Please try again later.');
+        } else {
+            showError('Login failed. Please try again.');
+        }
+    }
 }
 
-// Handle user registration
-function handleRegister(event) {
+/**
+ * Handle User Registration
+ * Creates new user account with Firebase Auth and stores profile in Firestore
+ */
+async function handleRegister(event) {
     event.preventDefault();
     
     const name = document.getElementById('name').value;
@@ -333,41 +407,104 @@ function handleRegister(event) {
         return;
     }
 
-    // TODO: Firebase Auth integration will be added here
-    // For now, simulate registration
-    alert('Registration successful! Please login.');
-    window.location.href = 'login.html';
+    try {
+        // Create user with Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        // Store user profile in Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+            name: name,
+            email: email,
+            role: 'user', // Default role is 'user'
+            createdAt: new Date().toISOString()
+        });
+        
+        alert('Registration successful! Please login.');
+        window.location.href = 'login.html';
+        
+    } catch (error) {
+        console.error('Registration error:', error);
+        
+        // Handle specific error codes
+        if (error.code === 'auth/email-already-in-use') {
+            showError('Email is already registered. Please login instead.');
+        } else if (error.code === 'auth/invalid-email') {
+            showError('Invalid email format.');
+        } else if (error.code === 'auth/weak-password') {
+            showError('Password is too weak. Use at least 6 characters.');
+        } else {
+            showError('Registration failed. Please try again.');
+        }
+    }
 }
 
-// Handle logout
-function handleLogout(event) {
+/**
+ * Handle Logout
+ * Signs out user from Firebase Auth
+ */
+async function handleLogout(event) {
     event.preventDefault();
     
     if (confirm('Are you sure you want to logout?')) {
-        // TODO: Firebase Auth integration will be added here
-        sessionStorage.removeItem('currentUser');
-        alert('Logged out successfully.');
-        window.location.href = 'index.html';
+        try {
+            await signOut(auth);
+            alert('Logged out successfully.');
+            window.location.href = 'index.html';
+        } catch (error) {
+            console.error('Logout error:', error);
+            showError('Logout failed. Please try again.');
+        }
     }
 }
 
 // ========== USER DASHBOARD FUNCTIONS ==========
 
-// Load user dashboard
-function loadUserDashboard() {
-    if (!isLoggedIn()) {
+/**
+ * Load User Dashboard
+ * Checks authentication and displays user information
+ */
+async function loadUserDashboard() {
+    // Wait for auth state to be determined
+    if (!auth.currentUser) {
         alert('Please login to access the dashboard.');
         window.location.href = 'login.html';
         return;
     }
 
-    const user = getCurrentUser();
-    const welcomeElement = document.getElementById('welcome-message');
-    if (welcomeElement) {
-        welcomeElement.textContent = `Welcome, ${user.name}!`;
-    }
+    try {
+        // Get user data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+        
+        if (!userDoc.exists()) {
+            alert('User profile not found. Please contact support.');
+            await signOut(auth);
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        const userData = userDoc.data();
+        
+        // Check if user has correct role
+        if (userData.role !== 'user') {
+            alert('Access denied. This page is for users only.');
+            await signOut(auth);
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Display welcome message
+        const welcomeElement = document.getElementById('welcome-message');
+        if (welcomeElement) {
+            welcomeElement.textContent = `Welcome, ${userData.name}!`;
+        }
 
-    loadUserRegistrations();
+        loadUserRegistrations();
+        
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        showError('Error loading dashboard. Please try again.');
+    }
 }
 
 // Load user registrations
