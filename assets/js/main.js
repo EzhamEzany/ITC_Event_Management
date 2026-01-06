@@ -62,6 +62,22 @@ onAuthStateChanged(auth, async (user) => {
     
     // Update navigation based on auth state
     updateNavigation();
+    
+    // Handle dashboard page guard
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === 'user-dashboard.html') {
+        if (user) {
+            // User is authenticated, load dashboard
+            await loadUserDashboard();
+        } else {
+            // No user, redirect to login
+            alert('Please login to access the dashboard.');
+            window.location.href = 'login.html';
+        }
+    } else if (currentPage === 'login.html' && user) {
+        // User just logged in from login page, redirect to dashboard
+        window.location.href = 'user-dashboard.html';
+    }
 });
 
 // ========== UTILITY FUNCTIONS ==========
@@ -424,9 +440,8 @@ async function handleLogin(event) {
             return;
         }
         
-        // Redirect to user dashboard
+        // Success - onAuthStateChanged will handle redirect
         alert('Login successful!');
-        window.location.href = 'user-dashboard.html';
         
     } catch (error) {
         console.error('Login error:', error);
@@ -530,12 +545,8 @@ async function handleLogout(event) {
  * Checks authentication and displays user information
  */
 async function loadUserDashboard() {
-    // Wait for auth state to be determined
-    if (!auth.currentUser) {
-        alert('Please login to access the dashboard.');
-        window.location.href = 'login.html';
-        return;
-    }
+    // This function is now only called after auth state is confirmed by onAuthStateChanged
+    // No need to check auth.currentUser here
 
     try {
         // Get user data from Firestore
@@ -718,8 +729,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             break;
             
         case 'user-dashboard.html':
-            // Load user dashboard
-            await loadUserDashboard();
+            // Dashboard loading is handled by onAuthStateChanged listener
+            // Do not load here to avoid race conditions
             break;
     }
 });

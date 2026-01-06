@@ -64,6 +64,36 @@ onAuthStateChanged(auth, async (user) => {
             console.error('Error fetching admin data:', error);
         }
     }
+    
+    // Handle dashboard page guard
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === 'admin-dashboard.html') {
+        if (user) {
+            // User is authenticated, verify admin role and load dashboard
+            const isAuthorized = await requireAdminAuth();
+            if (isAuthorized) {
+                await loadAdminDashboard();
+            }
+        } else {
+            // No user, redirect to login
+            alert('Please login as ITC organizer to access this page.');
+            window.location.href = 'admin-login.html';
+        }
+    } else if (currentPage === 'admin-login.html' && user) {
+        // Admin just logged in from login page, verify role and redirect
+        try {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                // Check if user has admin role OR is in admin email whitelist
+                if (userData.role === 'admin' || ADMIN_EMAILS.includes(user.email)) {
+                    window.location.href = 'admin-dashboard.html';
+                }
+            }
+        } catch (error) {
+            console.error('Error verifying admin:', error);
+        }
+    }
 });
 
 // ========== UTILITY FUNCTIONS ==========
@@ -188,9 +218,8 @@ async function handleAdminLogin(event) {
             return;
         }
         
-        // Redirect to admin dashboard
+        // Success - onAuthStateChanged will handle redirect
         alert('ITC organizer login successful!');
-        window.location.href = 'admin-dashboard.html';
         
     } catch (error) {
         console.error('Admin login error:', error);
@@ -232,9 +261,8 @@ async function handleAdminLogout() {
  * Verifies admin authentication and displays dashboard data
  */
 async function loadAdminDashboard() {
-    // Verify admin authentication
-    const isAuthorized = await requireAdminAuth();
-    if (!isAuthorized) return;
+    // This function is now only called after auth state is confirmed by onAuthStateChanged
+    // No need to verify auth again here
     
     try {
         // Get admin data from Firestore
@@ -698,7 +726,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             break;
             
         case 'admin-dashboard.html':
-            await loadAdminDashboard();
+            // Dashboard loading is handled by onAuthStateChanged listener
+            // Do not load here to avoid race conditions
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', handleAdminLogout);
