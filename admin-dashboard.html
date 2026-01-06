@@ -1,0 +1,97 @@
+<!-- ===========================================
+     UTHM Event Management System - Admin Dashboard Page
+     File: admin-dashboard.html
+     Description: Admin dashboard for managing events
+     =========================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin Dashboard - Manage events">
+    <title>Admin Dashboard - UTHM Event Management System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar admin-navbar">
+        <div class="container">
+            <a href="admin-dashboard.html" class="navbar-brand">UTHM Events - Admin Panel</a>
+            <ul class="navbar-menu">
+                <li><a href="admin-dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="admin-add-event.html">Add Event</a></li>
+                <li><a href="#" id="logout-btn">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content-wrapper">
+        <div class="container">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div>
+                    <h1 id="welcome-message">Welcome, Admin!</h1>
+                    <p class="text-light">Event Management Dashboard</p>
+                </div>
+                <div>
+                    <a href="admin-add-event.html" class="btn btn-secondary">Add New Event</a>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3>Total Events</h3>
+                    <div class="stat-number" id="total-events">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Participants</h3>
+                    <div class="stat-number" id="total-participants">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Upcoming Events</h3>
+                    <div class="stat-number" id="upcoming-events">0</div>
+                </div>
+            </div>
+
+            <!-- Events Table Section -->
+            <div class="admin-section">
+                <h2 class="mb-3">Manage Events</h2>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Event Title</th>
+                                <th>Date</th>
+                                <th>Location</th>
+                                <th>Participants</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="events-tbody">
+                            <!-- Events will be dynamically loaded here -->
+                            <tr>
+                                <td colspan="6" class="text-center">Loading events...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Universiti Tun Hussein Onn Malaysia (UTHM)</p>
+            <p>Event Management System | BIT21503 Web Development Project</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
