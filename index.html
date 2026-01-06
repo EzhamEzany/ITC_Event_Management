@@ -1,0 +1,71 @@
+<!-- ===========================================
+     UTHM Event Management System - Home Page
+     File: index.html
+     Description: Homepage displaying featured events
+     =========================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UTHM Event Management System - Discover and register for campus events">
+    <title>UTHM Event Management System - Home</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">UTHM Events</a>
+            <ul class="navbar-menu">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Welcome to UTHM Event Management System</h1>
+            <p>Discover, Register, and Participate in Campus Events</p>
+            <a href="events.html" class="btn btn-secondary">Browse Events</a>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="content-wrapper">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Featured Events</h1>
+                <p>Upcoming events you don't want to miss</p>
+            </div>
+
+            <!-- Featured Events Grid -->
+            <div class="grid grid-3" id="featured-events">
+                <!-- Events will be dynamically loaded here by JavaScript -->
+                <p class="text-center">Loading events...</p>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="text-center mt-4">
+                <a href="events.html" class="btn btn-primary">View All Events</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Universiti Tun Hussein Onn Malaysia (UTHM)</p>
+            <p>Event Management System | BIT21503 Web Development Project</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
