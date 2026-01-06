@@ -1,0 +1,93 @@
+<!-- ===========================================
+     UTHM Event Management System - User Login Page
+     File: login.html
+     Description: User authentication page
+     =========================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Login to UTHM Event Management System">
+    <title>Login - UTHM Event Management System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">UTHM Events</a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="login.html" class="active">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content-wrapper">
+        <div class="container">
+            <!-- Login Form Container -->
+            <div class="form-container">
+                <h2 class="text-center mb-3">User Login</h2>
+                <p class="text-center text-light mb-4">Login to register for events and manage your participation</p>
+                
+                <!-- Error Message -->
+                <div id="error-message" class="alert alert-error" style="display: none;"></div>
+                
+                <!-- Login Form -->
+                <form id="login-form">
+                    <!-- Email Field -->
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            class="form-control" 
+                            placeholder="Enter your email"
+                            required
+                        >
+                        <small class="form-text">Use your UTHM email address</small>
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="form-control" 
+                            placeholder="Enter your password"
+                            required
+                        >
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block">Login</button>
+                    </div>
+                    
+                    <!-- Additional Links -->
+                    <div class="text-center mt-3">
+                        <p>Don't have an account? <a href="register.html">Register here</a></p>
+                        <p><small>Are you an admin? <a href="admin-login.html">Admin Login</a></small></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Universiti Tun Hussein Onn Malaysia (UTHM)</p>
+            <p>Event Management System | BIT21503 Web Development Project</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

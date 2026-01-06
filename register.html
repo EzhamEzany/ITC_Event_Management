@@ -1,0 +1,119 @@
+<!-- ===========================================
+     UTHM Event Management System - User Registration Page
+     File: register.html
+     Description: User account creation page
+     =========================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Register for UTHM Event Management System">
+    <title>Register - UTHM Event Management System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">UTHM Events</a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html" class="active">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content-wrapper">
+        <div class="container">
+            <!-- Registration Form Container -->
+            <div class="form-container">
+                <h2 class="text-center mb-3">Create Account</h2>
+                <p class="text-center text-light mb-4">Register to participate in UTHM events</p>
+                
+                <!-- Error Message -->
+                <div id="error-message" class="alert alert-error" style="display: none;"></div>
+                
+                <!-- Registration Form -->
+                <form id="register-form">
+                    <!-- Name Field -->
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            class="form-control" 
+                            placeholder="Enter your full name"
+                            required
+                        >
+                    </div>
+                    
+                    <!-- Email Field -->
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            class="form-control" 
+                            placeholder="Enter your UTHM email"
+                            required
+                        >
+                        <small class="form-text">Use your UTHM email address (e.g., student@uthm.edu.my)</small>
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="form-control" 
+                            placeholder="Create a password"
+                            minlength="6"
+                            required
+                        >
+                        <small class="form-text">Password must be at least 6 characters long</small>
+                    </div>
+                    
+                    <!-- Confirm Password Field -->
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="confirm-password" 
+                            class="form-control" 
+                            placeholder="Confirm your password"
+                            minlength="6"
+                            required
+                        >
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block">Register</button>
+                    </div>
+                    
+                    <!-- Additional Links -->
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a href="login.html">Login here</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Universiti Tun Hussein Onn Malaysia (UTHM)</p>
+            <p>Event Management System | BIT21503 Web Development Project</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
