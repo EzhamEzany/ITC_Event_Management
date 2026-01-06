@@ -4,6 +4,9 @@
    Description: JavaScript for ITC organizer pages
    =========================================== */
 
+// Import Firebase services
+import { auth, db } from './firebase.js';
+
 // ========== ADMIN DUMMY DATA ==========
 let adminEvents = [
     {

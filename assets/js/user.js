@@ -4,6 +4,9 @@
    Description: Additional user-specific utilities
    =========================================== */
 
+// Import Firebase services (available if needed for future use)
+import { auth, db } from './firebase.js';
+
 // ========== FORM VALIDATION UTILITIES ==========
 
 // Validate email format

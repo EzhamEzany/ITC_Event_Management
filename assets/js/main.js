@@ -4,6 +4,9 @@
    Description: Main JavaScript for user-facing pages
    =========================================== */
 
+// Import Firebase services
+import { auth, db } from './firebase.js';
+
 // ========== DUMMY DATA FOR PROTOTYPE ==========
 const dummyEvents = [
     {
