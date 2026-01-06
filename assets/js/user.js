@@ -1,5 +1,5 @@
 /* ===========================================
-   UTHM Event Management System - User Utilities
+   ITC Event Management System - User Utilities
    File: assets/js/user.js
    Description: Additional user-specific utilities
    =========================================== */

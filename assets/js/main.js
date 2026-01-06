@@ -1,5 +1,5 @@
 /* ===========================================
-   UTHM Event Management System - Main JavaScript
+   ITC Event Management System - Main JavaScript
    File: assets/js/main.js
    Description: Main JavaScript for user-facing pages
    =========================================== */
@@ -8,8 +8,8 @@
 const dummyEvents = [
     {
         id: 1,
-        title: "UTHM Tech Conference 2026",
-        description: "Annual technology conference featuring latest innovations in software development, AI, and data science. Join us for keynote speeches, workshops, and networking opportunities.",
+        title: "ITC Tech Talk 2026",
+        description: "Annual technology talk featuring latest innovations in software development, AI, and data science. Join ITC for keynote speeches, workshops, and networking opportunities.",
         date: "2026-02-15",
         time: "09:00 AM",
         location: "Dewan Kuliah Utama, UTHM",
@@ -18,31 +18,31 @@ const dummyEvents = [
     },
     {
         id: 2,
-        title: "Engineering Innovation Expo",
-        description: "Showcase of innovative engineering projects from UTHM students. Discover cutting-edge solutions and creative designs from various engineering disciplines.",
+        title: "ITC Coding Workshop",
+        description: "Hands-on coding workshop organized by ITC. Learn programming fundamentals and best practices from experienced developers and industry professionals.",
         date: "2026-03-20",
         time: "10:00 AM",
-        location: "Faculty of Engineering, UTHM",
+        location: "Computer Lab, Faculty of FSKTM, UTHM",
         image: "assets/images/event2.jpg",
         registered: false
     },
     {
         id: 3,
-        title: "Career Fair 2026",
-        description: "Meet potential employers and explore career opportunities. Connect with industry leaders and learn about internships and job openings.",
+        title: "ITC Hackathon 2026",
+        description: "24-hour coding competition organized by ITC. Form teams, solve challenges, and win prizes. Perfect for students passionate about technology and innovation.",
         date: "2026-04-10",
         time: "08:30 AM",
-        location: "Sports Complex, UTHM",
+        location: "ITC Lab, UTHM",
         image: "assets/images/event3.jpg",
         registered: false
     },
     {
         id: 4,
-        title: "Cultural Night Festival",
-        description: "Celebrate diversity with performances, traditional food, and cultural exhibitions from various communities. Experience the rich tapestry of Malaysian culture.",
+        title: "ITC Career Guidance Session",
+        description: "Career guidance and networking session organized by ITC. Meet industry professionals and learn about career paths in Information Technology.",
         date: "2026-05-05",
         time: "06:00 PM",
-        location: "Outdoor Arena, UTHM",
+        location: "Seminar Room, FSKTM, UTHM",
         image: "assets/images/event4.jpg",
         registered: false
     }
@@ -221,7 +221,7 @@ function checkIfRegistered(eventId) {
 // Register for event
 function registerForEvent(eventId) {
     if (!isLoggedIn()) {
-        alert('Please login to register for events.');
+        alert('Please login to register for ITC events.');
         window.location.href = 'login.html';
         return;
     }
@@ -236,7 +236,7 @@ function registerForEvent(eventId) {
     );
     
     if (alreadyRegistered) {
-        alert('You are already registered for this event.');
+        alert('You are already registered for this ITC event.');
         return;
     }
     
@@ -251,13 +251,13 @@ function registerForEvent(eventId) {
     registrations.push(registration);
     localStorage.setItem('userRegistrations', JSON.stringify(registrations));
     
-    alert('Successfully registered for the event!');
+    alert('Successfully registered for the ITC event!');
     location.reload();
 }
 
 // Cancel event registration
 function cancelRegistration(eventId) {
-    if (!confirm('Are you sure you want to cancel this registration?')) {
+    if (!confirm('Are you sure you want to cancel this ITC event registration?')) {
         return;
     }
 
@@ -389,7 +389,7 @@ function renderUserRegistrations(events) {
     container.innerHTML = '';
 
     if (events.length === 0) {
-        container.innerHTML = '<p class="text-center">You have not registered for any events yet.</p>';
+        container.innerHTML = '<p class="text-center">You have not registered for any ITC events yet.</p>';
         return;
     }
 

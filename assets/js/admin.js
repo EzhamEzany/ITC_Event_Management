@@ -1,15 +1,15 @@
 /* ===========================================
-   UTHM Event Management System - Admin JavaScript
+   ITC Event Management System - Admin JavaScript
    File: assets/js/admin.js
-   Description: JavaScript for admin pages
+   Description: JavaScript for ITC organizer pages
    =========================================== */
 
 // ========== ADMIN DUMMY DATA ==========
 let adminEvents = [
     {
         id: 1,
-        title: "UTHM Tech Conference 2026",
-        description: "Annual technology conference featuring latest innovations in software development, AI, and data science. Join us for keynote speeches, workshops, and networking opportunities.",
+        title: "ITC Tech Talk 2026",
+        description: "Annual technology talk featuring latest innovations in software development, AI, and data science. Join ITC for keynote speeches, workshops, and networking opportunities.",
         date: "2026-02-15",
         time: "09:00 AM",
         location: "Dewan Kuliah Utama, UTHM",
@@ -18,21 +18,21 @@ let adminEvents = [
     },
     {
         id: 2,
-        title: "Engineering Innovation Expo",
-        description: "Showcase of innovative engineering projects from UTHM students. Discover cutting-edge solutions and creative designs from various engineering disciplines.",
+        title: "ITC Coding Workshop",
+        description: "Hands-on coding workshop organized by ITC. Learn programming fundamentals and best practices from experienced developers and industry professionals.",
         date: "2026-03-20",
         time: "10:00 AM",
-        location: "Faculty of Engineering, UTHM",
+        location: "Computer Lab, Faculty of FSKTM, UTHM",
         image: "assets/images/event2.jpg",
         participants: 32
     },
     {
         id: 3,
-        title: "Career Fair 2026",
-        description: "Meet potential employers and explore career opportunities. Connect with industry leaders and learn about internships and job openings.",
+        title: "ITC Hackathon 2026",
+        description: "24-hour coding competition organized by ITC. Form teams, solve challenges, and win prizes. Perfect for students passionate about technology and innovation.",
         date: "2026-04-10",
         time: "08:30 AM",
-        location: "Sports Complex, UTHM",
+        location: "ITC Lab, UTHM",
         image: "assets/images/event3.jpg",
         participants: 78
     }
@@ -78,7 +78,7 @@ function getCurrentAdmin() {
 // Redirect if not logged in
 function requireAdminAuth() {
     if (!isAdminLoggedIn()) {
-        alert('Please login as admin to access this page.');
+        alert('Please login as ITC organizer to access this page.');
         window.location.href = 'admin-login.html';
         return false;
     }
@@ -115,13 +115,13 @@ function handleAdminLogin(event) {
     const admin = {
         id: Date.now(),
         email: email,
-        name: 'Admin User',
+        name: 'ITC Organizer',
         role: 'admin'
     };
     
     sessionStorage.setItem('currentAdmin', JSON.stringify(admin));
     
-    alert('Admin login successful!');
+    alert('ITC organizer login successful!');
     window.location.href = 'admin-dashboard.html';
 }
 
@@ -230,7 +230,7 @@ function handleAddEvent(event) {
     
     adminEvents.push(newEvent);
     
-    alert('Event added successfully!');
+    alert('ITC event added successfully!');
     window.location.href = 'admin-dashboard.html';
 }
 
@@ -314,7 +314,7 @@ function handleEditEvent(event) {
             image: imageFile ? `assets/images/${imageFile.name}` : adminEvents[eventIndex].image
         };
         
-        alert('Event updated successfully!');
+        alert('ITC event updated successfully!');
         window.location.href = 'admin-dashboard.html';
     } else {
         showError('Event not found.');
@@ -323,7 +323,7 @@ function handleEditEvent(event) {
 
 // Delete event
 function deleteEvent(eventId) {
-    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to delete this ITC event? This action cannot be undone.')) {
         return;
     }
 
@@ -332,7 +332,7 @@ function deleteEvent(eventId) {
     const eventIndex = adminEvents.findIndex(e => e.id === eventId);
     if (eventIndex !== -1) {
         adminEvents.splice(eventIndex, 1);
-        alert('Event deleted successfully.');
+        alert('ITC event deleted successfully.');
         loadAdminEvents();
     } else {
         alert('Event not found.');
@@ -382,7 +382,7 @@ function renderParticipantsTable(participants) {
     tbody.innerHTML = '';
     
     if (participants.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No participants registered yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No participants registered for this ITC event yet.</td></tr>';
         return;
     }
     
