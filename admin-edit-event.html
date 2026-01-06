@@ -1,0 +1,154 @@
+<!-- ===========================================
+     UTHM Event Management System - Edit Event Page
+     File: admin-edit-event.html
+     Description: Admin page for editing existing events
+     =========================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Edit event details">
+    <title>Edit Event - UTHM Event Management System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar admin-navbar">
+        <div class="container">
+            <a href="admin-dashboard.html" class="navbar-brand">UTHM Events - Admin Panel</a>
+            <ul class="navbar-menu">
+                <li><a href="admin-dashboard.html">Dashboard</a></li>
+                <li><a href="admin-add-event.html">Add Event</a></li>
+                <li><a href="#" id="logout-btn" onclick="handleAdminLogout()">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content-wrapper">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Edit Event</h1>
+                <p>Update event information</p>
+            </div>
+
+            <!-- Edit Event Form Container -->
+            <div class="admin-section" style="max-width: 800px; margin: 0 auto;">
+                <!-- Error Message -->
+                <div id="error-message" class="alert alert-error" style="display: none;"></div>
+                
+                <!-- Edit Event Form -->
+                <form id="edit-event-form">
+                    <!-- Hidden Event ID -->
+                    <input type="hidden" id="event-id">
+                    
+                    <!-- Event Title -->
+                    <div class="form-group">
+                        <label for="title">Event Title *</label>
+                        <input 
+                            type="text" 
+                            id="title" 
+                            class="form-control" 
+                            placeholder="Enter event title"
+                            required
+                        >
+                    </div>
+                    
+                    <!-- Event Description -->
+                    <div class="form-group">
+                        <label for="description">Event Description *</label>
+                        <textarea 
+                            id="description" 
+                            class="form-control" 
+                            placeholder="Enter event description"
+                            rows="5"
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <!-- Date and Time Row -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <!-- Event Date -->
+                        <div class="form-group">
+                            <label for="date">Event Date *</label>
+                            <input 
+                                type="date" 
+                                id="date" 
+                                class="form-control"
+                                required
+                            >
+                        </div>
+                        
+                        <!-- Event Time -->
+                        <div class="form-group">
+                            <label for="time">Event Time *</label>
+                            <input 
+                                type="time" 
+                                id="time" 
+                                class="form-control"
+                                required
+                            >
+                        </div>
+                    </div>
+                    
+                    <!-- Event Location -->
+                    <div class="form-group">
+                        <label for="location">Event Location *</label>
+                        <input 
+                            type="text" 
+                            id="location" 
+                            class="form-control" 
+                            placeholder="Enter event location"
+                            required
+                        >
+                    </div>
+                    
+                    <!-- Current Image -->
+                    <div class="form-group">
+                        <label>Current Event Image</label>
+                        <div style="margin-top: 0.5rem;">
+                            <img id="current-image" src="" alt="Current Event Image" style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+                        </div>
+                    </div>
+                    
+                    <!-- Event Image -->
+                    <div class="form-group">
+                        <label for="image">Update Event Poster/Image</label>
+                        <input 
+                            type="file" 
+                            id="image" 
+                            class="form-control"
+                            accept="image/*"
+                        >
+                        <small class="form-text">Upload a new image to replace the current one (optional)</small>
+                    </div>
+                    
+                    <!-- New Image Preview -->
+                    <div class="form-group">
+                        <img id="image-preview" src="" alt="New Image Preview" style="display: none; max-width: 100%; border-radius: 8px;">
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="admin-actions">
+                        <button type="submit" class="btn btn-secondary" style="flex: 1;">Update Event</button>
+                        <a href="admin-dashboard.html" class="btn btn-outline" style="flex: 1;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Universiti Tun Hussein Onn Malaysia (UTHM)</p>
+            <p>Event Management System | BIT21503 Web Development Project</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
