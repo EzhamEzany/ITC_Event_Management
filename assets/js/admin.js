@@ -65,14 +65,24 @@ onAuthStateChanged(auth, async (user) => {
         }
     }
     
-    // Handle dashboard page guard
+    // Handle page guards for all admin pages
     const currentPage = window.location.pathname.split('/').pop();
-    if (currentPage === 'admin-dashboard.html') {
+    
+    // Admin-only pages that require authentication
+    const adminPages = [
+        'admin-dashboard.html',
+        'admin-add-event.html',
+        'admin-edit-event.html',
+        'admin-view-participants.html'
+    ];
+    
+    if (adminPages.includes(currentPage)) {
         if (user) {
-            // User is authenticated, verify admin role and load dashboard
+            // User is authenticated, verify admin role
             const isAuthorized = await requireAdminAuth();
             if (isAuthorized) {
-                await loadAdminDashboard();
+                // Trigger page-specific initialization
+                initializeAdminPage(currentPage);
             }
         } else {
             // No user, redirect to login
@@ -711,23 +721,13 @@ function showError(message) {
 // ========== PAGE INITIALIZATION ==========
 
 /**
- * Initialize Admin Pages
- * Sets up event listeners and loads page-specific content
+ * Initialize page-specific content after auth is confirmed
+ * Called by onAuthStateChanged AFTER admin role is verified
  */
-document.addEventListener('DOMContentLoaded', async function() {
-    const currentPage = window.location.pathname.split('/').pop();
-    
+async function initializeAdminPage(currentPage) {
     switch(currentPage) {
-        case 'admin-login.html':
-            const loginForm = document.getElementById('admin-login-form');
-            if (loginForm) {
-                loginForm.addEventListener('submit', handleAdminLogin);
-            }
-            break;
-            
         case 'admin-dashboard.html':
-            // Dashboard loading is handled by onAuthStateChanged listener
-            // Do not load here to avoid race conditions
+            await loadAdminDashboard();
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', handleAdminLogout);
@@ -735,9 +735,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             break;
             
         case 'admin-add-event.html':
-            const isAuthAdd = await requireAdminAuth();
-            if (!isAuthAdd) return;
-            
             const addForm = document.getElementById('add-event-form');
             if (addForm) {
                 addForm.addEventListener('submit', handleAddEvent);
@@ -751,9 +748,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             break;
             
         case 'admin-edit-event.html':
-            const isAuthEdit = await requireAdminAuth();
-            if (!isAuthEdit) return;
-            
             await loadEditEvent();
             const editForm = document.getElementById('edit-event-form');
             if (editForm) {
@@ -770,6 +764,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         case 'admin-view-participants.html':
             await loadParticipants();
             break;
+    }
+}
+
+/**
+ * Setup non-authenticated pages
+ * Handles pages that don't require admin auth
+ */
+document.addEventListener('DOMContentLoaded', async function() {
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Only handle login page in DOMContentLoaded
+    // Admin pages are initialized by onAuthStateChanged
+    if (currentPage === 'admin-login.html') {
+        const loginForm = document.getElementById('admin-login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleAdminLogin);
+        }
     }
 });
 

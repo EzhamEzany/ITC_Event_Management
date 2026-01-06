@@ -150,6 +150,7 @@ function updateNavigation() {
     const loginLink = document.querySelector('a[href="login.html"]');
     const registerLink = document.querySelector('a[href="register.html"]');
     
+    // Update text/href FIRST based on auth state, THEN make visible
     if (isLoggedIn()) {
         const user = getCurrentUser();
         if (loginLink) {
@@ -161,7 +162,21 @@ function updateNavigation() {
             registerLink.href = '#';
             registerLink.addEventListener('click', handleLogout);
         }
+    } else {
+        // Not logged in - reset to default state
+        if (loginLink) {
+            loginLink.textContent = 'Login';
+            loginLink.href = 'login.html';
+        }
+        if (registerLink) {
+            registerLink.textContent = 'Register';
+            registerLink.href = 'register.html';
+        }
     }
+    
+    // Remove auth-loading class AFTER text is updated (prevents flicker)
+    if (loginLink) loginLink.classList.remove('auth-loading');
+    if (registerLink) registerLink.classList.remove('auth-loading');
 }
 
 // ========== EVENT LISTING FUNCTIONS ==========
