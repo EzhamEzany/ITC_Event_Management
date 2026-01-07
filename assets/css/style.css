@@ -26,6 +26,11 @@
     box-sizing: border-box;
 }
 
+/* Auth state loading utility */
+.auth-loading {
+    visibility: hidden;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;

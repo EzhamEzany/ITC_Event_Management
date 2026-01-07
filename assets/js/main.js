@@ -287,6 +287,7 @@ async function displayEventDetails(event) {
     const imageElement = document.getElementById('event-image');
     const titleElement = document.getElementById('event-title');
     const dateElement = document.getElementById('event-date');
+    const timeElement = document.getElementById('event-time');
     const locationElement = document.getElementById('event-location');
     const descriptionElement = document.getElementById('event-description');
     const registerBtn = document.getElementById('register-btn');
@@ -298,6 +299,7 @@ async function displayEventDetails(event) {
     }
     if (titleElement) titleElement.textContent = event.title;
     if (dateElement) dateElement.textContent = formatDate(event.date);
+    if (timeElement) timeElement.textContent = event.time || 'Not specified';
     if (locationElement) locationElement.textContent = event.location;
     if (descriptionElement) descriptionElement.textContent = event.description;
 

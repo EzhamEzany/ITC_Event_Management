@@ -5,7 +5,7 @@
    =========================================== */
 
 // Import Firebase services
-import { auth, db } from './firebase.js';
+import { auth, db, storage } from './firebase.js';
 import { 
     signInWithEmailAndPassword,
     signOut,
@@ -24,6 +24,11 @@ import {
     orderBy,
     Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {
+    ref,
+    uploadBytes,
+    getDownloadURL
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
 
 // ========== EVENTS DATA (Loaded from Firestore) ==========
 // Events are now loaded dynamically from Firestore
@@ -185,6 +190,38 @@ async function getEventById(eventId) {
     } catch (error) {
         console.error('Error getting event:', error);
         return null;
+    }
+}
+
+/**
+ * Upload event image to Firebase Storage
+ * @param {File} imageFile - The image file to upload
+ * @returns {Promise<string>} - Download URL of uploaded image
+ */
+async function uploadEventImage(imageFile) {
+    if (!imageFile) {
+        return null;
+    }
+    
+    try {
+        // Create unique filename with timestamp
+        const timestamp = Date.now();
+        const sanitizedFileName = imageFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
+        const filename = `events/${timestamp}_${sanitizedFileName}`;
+        
+        // Create storage reference
+        const storageRef = ref(storage, filename);
+        
+        // Upload file to Firebase Storage
+        await uploadBytes(storageRef, imageFile);
+        
+        // Get download URL
+        const downloadURL = await getDownloadURL(storageRef);
+        
+        return downloadURL;
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        throw new Error('Failed to upload image. Please try again.');
     }
 }
 
@@ -402,6 +439,7 @@ async function handleAddEvent(event) {
     const title = document.getElementById('title').value;
     const description = document.getElementById('description').value;
     const date = document.getElementById('date').value;
+    const time = document.getElementById('time').value;
     const location = document.getElementById('location').value;
     const imageFile = document.getElementById('image').files[0];
     
@@ -412,13 +450,22 @@ async function handleAddEvent(event) {
     }
 
     try {
+        // Default placeholder image
+        let imageUrl = 'assets/images/placeholder.jpg';
+        
+        // Upload image to Firebase Storage if provided
+        if (imageFile) {
+            imageUrl = await uploadEventImage(imageFile);
+        }
+        
         // Create event object
         const eventData = {
             title: title,
             description: description,
             date: date,
+            time: time || '',
             location: location,
-            imageUrl: imageFile ? `assets/images/${imageFile.name}` : 'assets/images/placeholder.jpg',
+            imageUrl: imageUrl,
             createdBy: auth.currentUser.uid,
             createdAt: new Date().toISOString()
         };
@@ -479,6 +526,13 @@ async function loadEditEvent() {
         document.getElementById('title').value = event.title;
         document.getElementById('description').value = event.description;
         document.getElementById('date').value = event.date;
+        
+        // Populate time field if it exists
+        const timeInput = document.getElementById('time');
+        if (timeInput && event.time) {
+            timeInput.value = event.time;
+        }
+        
         document.getElementById('location').value = event.location;
         
         // Display current image
@@ -505,6 +559,7 @@ async function handleEditEvent(event) {
     const title = document.getElementById('title').value;
     const description = document.getElementById('description').value;
     const date = document.getElementById('date').value;
+    const time = document.getElementById('time').value;
     const location = document.getElementById('location').value;
     const imageFile = document.getElementById('image').files[0];
     
@@ -528,13 +583,14 @@ async function handleEditEvent(event) {
             title: title,
             description: description,
             date: date,
+            time: time || '',
             location: location,
             updatedAt: new Date().toISOString()
         };
         
-        // Update image if new one is uploaded
+        // Upload new image to Firebase Storage if provided
         if (imageFile) {
-            updateData.imageUrl = `assets/images/${imageFile.name}`;
+            updateData.imageUrl = await uploadEventImage(imageFile);
         }
         
         // Update in Firestore
