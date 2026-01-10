@@ -877,13 +877,15 @@ tbody tr:hover {
 
 .event-detail-image {
     width: 100%;
-    height: 400px;
-    object-fit: cover;
+    height: auto;
+    max-height: 800px;
+    object-fit: contain;
+    background-color: var(--bg-light);
     transition: transform var(--transition-slower) var(--ease-smooth);
 }
 
 .event-detail:hover .event-detail-image {
-    transform: scale(1.02);
+    transform: scale(1.01);
 }
 
 .event-detail-content {
@@ -1119,7 +1121,7 @@ tbody tr:hover {
     }
 
     .event-detail-image {
-        height: 250px;
+        max-height: 500px;
     }
 
     .event-detail-title {
