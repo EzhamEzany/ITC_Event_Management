@@ -862,6 +862,22 @@ tbody tr:hover {
     box-shadow: var(--shadow-sm);
 }
 
+/* Table Action Buttons - Equal Width */
+table td .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    width: 80px;
+    margin-right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+table td .btn:last-child {
+    margin-right: 0;
+}
+
 /* ========== DASHBOARD ========== */
 .dashboard-header {
     display: flex;
