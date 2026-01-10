@@ -82,14 +82,45 @@ onAuthStateChanged(auth, async (user) => {
     ];
     
     if (adminPages.includes(currentPage)) {
+        console.log('=== Admin page detected:', currentPage, '===');
         if (user) {
+            console.log('User is authenticated:', user.email);
             // User is authenticated, verify admin role
-            const isAuthorized = await requireAdminAuth();
-            if (isAuthorized) {
-                // Trigger page-specific initialization
-                initializeAdminPage(currentPage);
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+
+                if (!userDoc.exists()) {
+                    console.error('User profile not found in Firestore');
+                    alert('User profile not found.');
+                    await signOut(auth);
+                    window.location.href = 'admin-login.html';
+                    return;
+                }
+
+                const userData = userDoc.data();
+                console.log('User data:', userData);
+                console.log('User role:', userData.role);
+                console.log('Is in whitelist:', ADMIN_EMAILS.includes(user.email));
+
+                // Check if user has admin role OR is in admin email whitelist
+                if (userData.role === 'admin' || ADMIN_EMAILS.includes(user.email)) {
+                    console.log('User authorized, initializing page...');
+                    // Authorized - trigger page-specific initialization
+                    await initializeAdminPage(currentPage);
+                    console.log('Page initialization complete');
+                } else {
+                    console.error('User not authorized - role:', userData.role);
+                    alert('Access denied. This page is for ITC organizers only.');
+                    await signOut(auth);
+                    window.location.href = 'admin-login.html';
+                }
+            } catch (error) {
+                console.error('Error verifying admin:', error);
+                alert('Authentication error. Please try again.');
+                window.location.href = 'admin-login.html';
             }
         } else {
+            console.log('No user authenticated');
             // No user, redirect to login
             alert('Please login as ITC organizer to access this page.');
             window.location.href = 'admin-login.html';
@@ -595,48 +626,45 @@ function editEvent(eventId) {
  * Load event for editing from Firestore
  */
 async function loadEditEvent() {
-    const isAuthorized = await requireAdminAuth();
-    if (!isAuthorized) return;
-    
     const urlParams = new URLSearchParams(window.location.search);
     const eventId = urlParams.get('id');
-    
+
     if (!eventId) {
         alert('Event not found.');
         window.location.href = 'admin-dashboard.html';
         return;
     }
-    
+
     try {
         const event = await getEventById(eventId);
-        
+
         if (!event) {
             alert('Event not found.');
             window.location.href = 'admin-dashboard.html';
             return;
         }
-        
+
         // Populate form
         document.getElementById('event-id').value = event.id;
         document.getElementById('title').value = event.title;
         document.getElementById('description').value = event.description;
         document.getElementById('date').value = event.date;
-        
+
         // Populate time field if it exists
         const timeInput = document.getElementById('time');
         if (timeInput && event.time) {
             timeInput.value = event.time;
         }
-        
+
         document.getElementById('location').value = event.location;
-        
+
         // Display current image
         const currentImage = document.getElementById('current-image');
         if (currentImage) {
             currentImage.src = event.imageUrl || 'assets/images/placeholder.jpg';
             currentImage.onerror = function() { this.src = 'assets/images/placeholder.jpg'; };
         }
-        
+
     } catch (error) {
         console.error('Error loading event:', error);
         alert('Error loading event. Please try again.');
@@ -739,65 +767,101 @@ async function deleteEvent(eventId) {
  * Displays list of registered participants with their details
  */
 async function loadParticipants() {
-    // Verify admin authentication
-    const isAuthorized = await requireAdminAuth();
-    if (!isAuthorized) return;
-    
+    console.log('=== loadParticipants() called ===');
+
     const urlParams = new URLSearchParams(window.location.search);
     const eventId = urlParams.get('id');
-    
+    console.log('Event ID from URL:', eventId);
+
     if (!eventId) {
+        console.error('No event ID found in URL');
         alert('Event not found.');
         window.location.href = 'admin-dashboard.html';
         return;
     }
-    
+
+    const tbody = document.getElementById('participants-tbody');
+    console.log('Table body element found:', tbody !== null);
+
     try {
+        console.log('Fetching event details...');
         // Get event details
         const event = await getEventById(eventId);
-        
+        console.log('Event data:', event);
+
         if (!event) {
+            console.error('Event not found in database');
             alert('Event not found.');
             window.location.href = 'admin-dashboard.html';
             return;
         }
-        
+
         // Display event title
         const eventTitleElement = document.getElementById('event-title');
         if (eventTitleElement) {
             eventTitleElement.textContent = event.title;
+            console.log('Event title displayed:', event.title);
         }
-        
+
+        // Show loading message
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading participants...</td></tr>';
+        }
+
+        console.log('Querying registrations collection...');
         // Get registrations for this event
         const registrationsQuery = query(
             collection(db, 'registrations'),
             where('eventId', '==', eventId)
         );
         const registrationsSnapshot = await getDocs(registrationsQuery);
-        
+
+        console.log('Found registrations:', registrationsSnapshot.size);
+        console.log('Registration documents:', registrationsSnapshot.docs.map(d => ({id: d.id, data: d.data()})));
+
         // Get participant details
         const participants = [];
         for (const regDoc of registrationsSnapshot.docs) {
             const regData = regDoc.data();
-            
+            console.log('Processing registration:', regDoc.id, regData);
+
             // Get user details from users collection
+            console.log('Fetching user with ID:', regData.userId);
             const userDoc = await getDoc(doc(db, 'users', regData.userId));
-            
+            console.log('User document exists:', userDoc.exists());
+
             if (userDoc.exists()) {
                 const userData = userDoc.data();
+                console.log('Found user:', userData);
                 participants.push({
-                    name: userData.name,
-                    email: userData.email,
-                    registeredAt: regData.registeredAt
+                    name: userData.name || 'N/A',
+                    email: userData.email || 'N/A',
+                    registeredAt: regData.registeredAt || new Date().toISOString()
+                });
+            } else {
+                console.warn('User not found for userId:', regData.userId);
+                // Add placeholder entry for missing user
+                participants.push({
+                    name: 'User Not Found',
+                    email: 'N/A',
+                    registeredAt: regData.registeredAt || new Date().toISOString()
                 });
             }
         }
-        
+
+        console.log('Total participants processed:', participants.length);
+        console.log('Participants data:', participants);
         renderParticipantsTable(participants);
-        
+
     } catch (error) {
-        console.error('Error loading participants:', error);
-        alert('Error loading participants. Please try again.');
+        console.error('=== ERROR in loadParticipants ===');
+        console.error('Error object:', error);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        console.error('Error stack:', error.stack);
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center" style="color: red;">Error loading participants. Please check console for details.<br>Error: ${error.message}</td></tr>`;
+        }
     }
 }
 
@@ -876,16 +940,20 @@ function showError(message) {
  * Called by onAuthStateChanged AFTER admin role is verified
  */
 async function initializeAdminPage(currentPage) {
+    console.log('=== initializeAdminPage called for:', currentPage, '===');
+
     switch(currentPage) {
         case 'admin-dashboard.html':
+            console.log('Initializing admin dashboard...');
             await loadAdminDashboard();
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', handleAdminLogout);
             }
             break;
-            
+
         case 'admin-add-event.html':
+            console.log('Initializing add event page...');
             const addForm = document.getElementById('add-event-form');
             if (addForm) {
                 addForm.addEventListener('submit', handleAddEvent);
@@ -897,8 +965,9 @@ async function initializeAdminPage(currentPage) {
                 });
             }
             break;
-            
+
         case 'admin-edit-event.html':
+            console.log('Initializing edit event page...');
             await loadEditEvent();
             const editForm = document.getElementById('edit-event-form');
             if (editForm) {
@@ -911,11 +980,20 @@ async function initializeAdminPage(currentPage) {
                 });
             }
             break;
-            
+
         case 'admin-view-participants.html':
+            console.log('Initializing view participants page...');
             await loadParticipants();
+            console.log('loadParticipants completed');
+            const viewLogoutBtn = document.getElementById('logout-btn');
+            if (viewLogoutBtn) {
+                viewLogoutBtn.addEventListener('click', handleAdminLogout);
+                console.log('Logout button event listener attached');
+            }
             break;
     }
+
+    console.log('=== initializeAdminPage completed ===');
 }
 
 /**
