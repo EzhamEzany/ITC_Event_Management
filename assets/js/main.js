@@ -683,6 +683,110 @@ function renderUserRegistrations(events) {
     });
 }
 
+// ========== SEARCH FUNCTIONALITY ==========
+
+let allEvents = []; // Store all events for filtering
+
+/**
+ * Initialize search functionality
+ */
+function initializeSearch() {
+    const searchInput = document.getElementById('search-input');
+    const clearBtn = document.getElementById('clear-search');
+    const resultsText = document.getElementById('search-results-text');
+
+    if (!searchInput) return;
+
+    // Handle search input
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+
+        // Show/hide clear button
+        if (searchTerm) {
+            clearBtn.style.display = 'flex';
+        } else {
+            clearBtn.style.display = 'none';
+        }
+
+        // Filter events
+        filterEvents(searchTerm);
+    });
+
+    // Handle clear button
+    clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        resultsText.textContent = '';
+        resultsText.classList.remove('no-results');
+        renderEvents(allEvents, 'events-list');
+    });
+}
+
+/**
+ * Filter events based on search term
+ * @param {string} searchTerm - The search query
+ */
+function filterEvents(searchTerm) {
+    const resultsText = document.getElementById('search-results-text');
+
+    if (!searchTerm) {
+        renderEvents(allEvents, 'events-list');
+        resultsText.textContent = '';
+        resultsText.classList.remove('no-results');
+        return;
+    }
+
+    // Convert search term to lowercase for case-insensitive search
+    const term = searchTerm.toLowerCase();
+
+    // Filter events by title, description, or location
+    const filteredEvents = allEvents.filter(event => {
+        const title = event.title.toLowerCase();
+        const description = event.description.toLowerCase();
+        const location = event.location.toLowerCase();
+
+        return title.includes(term) ||
+               description.includes(term) ||
+               location.includes(term);
+    });
+
+    // Update results text
+    if (filteredEvents.length === 0) {
+        resultsText.textContent = `No events found for "${searchTerm}"`;
+        resultsText.classList.add('no-results');
+    } else if (filteredEvents.length === 1) {
+        resultsText.textContent = `Found 1 event matching "${searchTerm}"`;
+        resultsText.classList.remove('no-results');
+    } else {
+        resultsText.textContent = `Found ${filteredEvents.length} events matching "${searchTerm}"`;
+        resultsText.classList.remove('no-results');
+    }
+
+    // Render filtered events
+    renderEvents(filteredEvents, 'events-list');
+}
+
+/**
+ * Load events and store them for search
+ */
+async function loadEventsForSearch() {
+    const container = document.getElementById('events-list');
+    if (!container) return;
+
+    container.innerHTML = '<p class="text-center">Loading events...</p>';
+
+    try {
+        allEvents = await loadEventsFromFirestore();
+        renderEvents(allEvents, 'events-list');
+
+        // Initialize search after events are loaded
+        initializeSearch();
+    } catch (error) {
+        console.error('Error loading events:', error);
+        container.innerHTML = '<p class="text-center">Error loading events. Please try again.</p>';
+    }
+}
+
 // ========== ERROR HANDLING ==========
 
 // Show error message
@@ -691,7 +795,7 @@ function showError(message) {
     if (errorDiv) {
         errorDiv.textContent = message;
         errorDiv.style.display = 'block';
-        
+
         setTimeout(() => {
             errorDiv.style.display = 'none';
         }, 5000);
@@ -720,8 +824,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             break;
             
         case 'events.html':
-            // Load all events
-            await loadAndRenderEvents('events-list');
+            // Load all events with search functionality
+            await loadEventsForSearch();
             break;
             
         case 'event-details.html':

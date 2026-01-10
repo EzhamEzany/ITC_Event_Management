@@ -38,6 +38,18 @@
                 <p>Browse and register for upcoming ITC events</p>
             </div>
 
+            <!-- Search Bar -->
+            <div class="search-container">
+                <div class="search-box">
+                    <img src="assets/icons/search.svg" alt="Search" class="search-icon">
+                    <input type="text" id="search-input" class="search-input" placeholder="Search events by title, location, or description...">
+                    <button type="button" id="clear-search" class="clear-search-btn" style="display: none;">
+                        <img src="assets/icons/close.svg" alt="Clear">
+                    </button>
+                </div>
+                <p class="search-results-text" id="search-results-text"></p>
+            </div>
+
             <!-- Events Grid -->
             <div class="grid grid-3" id="events-list">
                 <!-- Events will be dynamically loaded here by JavaScript -->
