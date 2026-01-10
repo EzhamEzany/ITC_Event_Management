@@ -716,6 +716,9 @@ img {
     border: 1px solid var(--border-light);
     animation: scaleIn var(--transition-slow) var(--ease-smooth);
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .card::before {
@@ -744,6 +747,7 @@ img {
     height: 200px;
     object-fit: cover;
     transition: transform var(--transition-slow) var(--ease-smooth);
+    flex-shrink: 0;
 }
 
 .card:hover .card-image {
@@ -752,6 +756,9 @@ img {
 
 .card-content {
     padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 .card-title {
@@ -771,6 +778,7 @@ img {
     color: var(--text-light);
     margin-bottom: var(--space-lg);
     line-height: 1.7;
+    flex-grow: 1;
 }
 
 .card-meta {
@@ -784,6 +792,11 @@ img {
 
 .card-meta i {
     margin-right: var(--space-xs);
+}
+
+/* Push button to bottom of card */
+.card-content .btn {
+    margin-top: auto;
 }
 
 /* ========== GRID LAYOUT ========== */
