@@ -303,6 +303,100 @@ async function handleAdminLogout() {
 
 // ========== ADMIN DASHBOARD ==========
 
+// ========== ADMIN SEARCH FUNCTIONALITY ==========
+
+let allAdminEvents = [];
+
+/**
+ * Initialize admin search functionality
+ */
+function initializeAdminSearch() {
+    const searchInput = document.getElementById('admin-search-input');
+    const clearBtn = document.getElementById('admin-clear-search');
+    const resultsText = document.getElementById('admin-search-results-text');
+
+    if (!searchInput || !clearBtn) return;
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        if (searchTerm) {
+            clearBtn.style.display = 'flex';
+        } else {
+            clearBtn.style.display = 'none';
+        }
+        filterAdminEvents(searchTerm);
+    });
+
+    clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        if (resultsText) resultsText.textContent = '';
+        renderAdminEvents(allAdminEvents);
+    });
+}
+
+/**
+ * Filter admin events based on search term
+ */
+function filterAdminEvents(searchTerm) {
+    const term = searchTerm.toLowerCase();
+    const resultsText = document.getElementById('admin-search-results-text');
+
+    const filteredEvents = allAdminEvents.filter(event => {
+        return event.title.toLowerCase().includes(term) ||
+               event.location.toLowerCase().includes(term) ||
+               event.date.includes(term) ||
+               formatDate(event.date).toLowerCase().includes(term);
+    });
+
+    if (resultsText) {
+        if (searchTerm) {
+            resultsText.textContent = `Found ${filteredEvents.length} event${filteredEvents.length !== 1 ? 's' : ''}`;
+            if (filteredEvents.length === 0) {
+                resultsText.classList.add('no-results');
+            } else {
+                resultsText.classList.remove('no-results');
+            }
+        } else {
+            resultsText.textContent = '';
+        }
+    }
+
+    renderAdminEvents(filteredEvents);
+}
+
+/**
+ * Render admin events in table
+ */
+function renderAdminEvents(events) {
+    const tbody = document.getElementById('events-tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (events.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No events found.</td></tr>';
+        return;
+    }
+
+    events.forEach((event, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${event.title}</td>
+            <td>${formatDate(event.date)}</td>
+            <td>${event.location}</td>
+            <td>${event.participantCount}</td>
+            <td>
+                <button onclick="viewParticipants('${event.id}')" class="btn btn-primary" style="margin-right: 0.5rem;">View</button>
+                <button onclick="editEvent('${event.id}')" class="btn btn-secondary" style="margin-right: 0.5rem;">Edit</button>
+                <button onclick="deleteEvent('${event.id}')" class="btn btn-danger">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
 /**
  * Load Admin Dashboard
  * Verifies admin authentication and displays dashboard data
@@ -378,26 +472,27 @@ async function displayAdminStats() {
 async function loadAdminEvents() {
     const tbody = document.getElementById('events-tbody');
     if (!tbody) return;
-    
+
     tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading events...</td></tr>';
-    
+
     try {
         // Get all events ordered by date
         const eventsQuery = query(collection(db, 'events'), orderBy('date', 'desc'));
         const eventsSnapshot = await getDocs(eventsQuery);
-        
-        tbody.innerHTML = '';
-        
+
+        // Clear the allAdminEvents array
+        allAdminEvents = [];
+
         if (eventsSnapshot.empty) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center">No events found.</td></tr>';
+            initializeAdminSearch();
             return;
         }
-        
-        // Get participant counts for each event
-        let eventIndex = 1;
+
+        // Get participant counts for each event and build events array
         for (const eventDoc of eventsSnapshot.docs) {
             const eventData = eventDoc.data();
-            
+
             // Count participants for this event
             const registrationsQuery = query(
                 collection(db, 'registrations'),
@@ -405,23 +500,23 @@ async function loadAdminEvents() {
             );
             const registrationsSnapshot = await getDocs(registrationsQuery);
             const participantCount = registrationsSnapshot.size;
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${eventIndex++}</td>
-                <td>${eventData.title}</td>
-                <td>${formatDate(eventData.date)}</td>
-                <td>${eventData.location}</td>
-                <td>${participantCount}</td>
-                <td>
-                    <button onclick="viewParticipants('${eventDoc.id}')" class="btn btn-primary" style="margin-right: 0.5rem;">View</button>
-                    <button onclick="editEvent('${eventDoc.id}')" class="btn btn-secondary" style="margin-right: 0.5rem;">Edit</button>
-                    <button onclick="deleteEvent('${eventDoc.id}')" class="btn btn-danger">Delete</button>
-                </td>
-            `;
-            tbody.appendChild(row);
+
+            // Add to allAdminEvents array
+            allAdminEvents.push({
+                id: eventDoc.id,
+                title: eventData.title,
+                date: eventData.date,
+                location: eventData.location,
+                participantCount: participantCount
+            });
         }
-        
+
+        // Render all events
+        renderAdminEvents(allAdminEvents);
+
+        // Initialize search functionality
+        initializeAdminSearch();
+
     } catch (error) {
         console.error('Error loading events:', error);
         tbody.innerHTML = '<tr><td colspan="6" class="text-center">Error loading events. Please try again.</td></tr>';

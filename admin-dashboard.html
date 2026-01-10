@@ -60,8 +60,19 @@
 
             <!-- Events Table Section -->
             <div class="admin-section">
-                <h2 class="mb-3">Manage ITC Events</h2>
-                
+                <!-- Title and Search Bar Row -->
+                <div class="section-header-with-search">
+                    <h2>Manage ITC Events</h2>
+                    <div class="search-box-inline">
+                        <img src="assets/icons/search.svg" alt="Search" class="search-icon">
+                        <input type="text" id="admin-search-input" class="search-input" placeholder="Search events by title, location, or date...">
+                        <button type="button" id="admin-clear-search" class="clear-search-btn" style="display: none;">
+                            <img src="assets/icons/close.svg" alt="Clear">
+                        </button>
+                    </div>
+                </div>
+                <p class="search-results-text" id="admin-search-results-text"></p>
+
                 <div class="table-container">
                     <table>
                         <thead>
