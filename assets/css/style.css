@@ -799,10 +799,21 @@ img {
     margin-top: auto;
 }
 
+/* Button group for equal-width buttons */
+.card-content > div[style*="display: flex"] .btn,
+.card-button-group .btn {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    padding: var(--space-md) var(--space-sm);
+    text-align: center;
+}
+
 /* ========== GRID LAYOUT ========== */
 .grid {
     display: grid;
     gap: var(--space-xl);
+    align-items: stretch;
 }
 
 .grid-2 {

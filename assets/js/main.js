@@ -672,9 +672,9 @@ function renderUserRegistrations(events) {
                     <span><strong>📍</strong> ${event.location}</span>
                 </div>
                 <p class="card-text"><small>Registered on: ${formatDate(event.registeredAt)}</small></p>
-                <div style="display: flex; gap: 1rem;">
-                    <a href="event-details.html?id=${event.id}" class="btn btn-primary" style="flex: 1;">View Details</a>
-                    <button onclick="cancelRegistration('${event.id}')" class="btn btn-danger" style="flex: 1;">Cancel</button>
+                <div class="card-button-group" style="display: flex; gap: 1rem;">
+                    <a href="event-details.html?id=${event.id}" class="btn btn-primary">View Details</a>
+                    <button onclick="cancelRegistration('${event.id}')" class="btn btn-danger">Cancel</button>
                 </div>
             </div>
         `;
